@@ -1,0 +1,36 @@
+{% extends 'chariot/base.html' %}
+
+{% load url from future %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+<form class="mdl-grid" action="{% url 'auth_login' %}" method="post" id="login-form">
+	{% csrf_token %}
+
+	<div class="mdl-cell mdl-cell--6-col mdl-cell--3-offset-desktop mdl-cell--1-offset-tablet ">
+		<div class="mdl-textfield mdl-js-textfield">
+			<input id="id_username" type="text" class="mdl-textfield__input" name="username"
+			       maxlength="30"/>
+			<label for="id_username" class="mdl-textfield__label">Username</label>
+		</div>
+
+		<div class="mdl-textfield mdl-js-textfield">
+			<label for="id_password" class="mdl-textfield__label">Password</label>
+			<input id="id_password" type="password" class="mdl-textfield__input" name="password"/>
+		</div>
+
+		{% if form.non_field_errors %}
+		{% for error in form.non_field_errors %}
+		<div class="mdl-color-text--red">
+			{{ error }}
+		</div>
+		{% endfor %}
+		{% endif %}
+
+		<input type="hidden" name="next" value="{% url 'home' %}"/>
+
+		<input type="submit" id="login_button" value="Login"
+		       class="mdl-button mdl-js-button mdl-button--raised mdl-button--colored" style="float:right">
+	</div>
+</form>
+{% endblock content %}

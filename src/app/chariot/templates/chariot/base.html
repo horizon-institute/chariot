@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+	{% load url from future %}
+	<title>{% block docTitle %}CharIoT{% endblock %}</title>
+
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+	<meta name="mobile-web-app-capable" content="yes">
+	<meta name="apple-mobile-web-app-capable" content="yes">
+	<meta name="theme-color" content="#2196f3">
+
+	{% block headers %}
+	<script>(function(a,b,c){if(c in b&&b[c]){var d,e=a.location,f=/^(a|html)$/i;a.addEventListener("click",function(a){d=a.target;while(!f.test(d.nodeName))d=d.parentNode;"href"in d&&(chref=d.href).replace(e.href,"").indexOf("#")&&(!/^[a-z\+\.\-]+:/i.test(chref)||chref.indexOf(e.protocol+"//"+e.host)===0)&&(a.preventDefault(),e.href=d.href)},!1)}})(document,window.navigator,"standalone");</script>
+	<link rel="stylesheet" href="/styles/chariot.css">
+	<link rel="stylesheet" href="/styles/icons.css">
+	<link rel="stylesheet" href="/styles/material.blue-red.min.css"/>
+	<script defer src="/scripts/material.min.js"></script>
+	{% endblock %}
+	{% block scripts %}
+	{% endblock %}
+</head>
+
+<body>
+
+<div class="mdl-layout mdl-js-layout mdl-layout--fixed-header">
+	<header class="mdl-layout__header">
+		{% if back_url %}
+		<a class="mdl-layout-icon mdl-button mdl-js-button mdl-button--icon" href="{{ back_url }}">
+			<i class="material-icons">arrow_back</i>
+		</a>
+		{% endif %}
+		<div class="mdl-layout__header-row">
+            <span class="mdl-layout-title">
+                {% block title %}CharIoT{% endblock %}
+            </span>
+			<div class="mdl-layout-spacer"></div>
+			{% block toolbar %}
+			{% endblock %}
+			{% if user.is_authenticated %}
+			<button id="account-menu"
+			        class="mdl-button mdl-js-button mdl-button--icon">
+				<i class="material-icons">account_circle</i>
+			</button>
+
+			<div class="mdl-menu mdl-menu--bottom-right mdl-js-menu mdl-js-ripple-effect" for="account-menu">
+				<div disabled class="mdl-menu__item">{{user.first_name|default:"Anonymous User"}}</div>
+				<a href="{% url 'devices' %}" class="mdl-menu__item">Devices</a>
+				{% block menu %}
+				{% endblock %}
+				<a href="{% url 'auth_logout' %}" class="mdl-menu__item">Logout</a>
+			</div>
+			{% endif %}
+		</div>
+		{% block tabs %}
+		{% endblock %}
+	</header>
+	<main class="mdl-layout__content">
+		{% block content %}
+		{% endblock %}
+	</main>
+
+	{% block fab %}
+	{% endblock %}
+</div>
+</body>
+
+{% block bottom-js %}
+{% endblock bottom-js %}
+</html>

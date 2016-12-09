@@ -1,0 +1,49 @@
+version: '2'
+services:
+    db:
+        image: mysql:5.5
+        environment:
+            MYSQL_ROOT_PASSWORD: chariot
+            MYSQL_DATABASE: chariot
+            MYSQL_USER: chariot
+            MYSQL_PASSWORD: chariot
+
+    app:
+        build: src/app
+        links:
+            - db
+        volumes:
+            - ./src/app:/app
+            - /media
+
+    web:
+        restart: always
+        image: nginx
+        ports:
+            - "80:80"
+            - "443:443"
+        links:
+            - app
+        volumes:
+            - ./src/conf/nginx${CONF_TAG}.conf:/etc/nginx/nginx.conf:ro
+            - ./cert/live/${DOMAINS}:/cert
+            - ./src/www:/www
+        volumes_from:
+            - app
+        environment:
+            - LE_RENEW_HOOK=docker kill -s HUP @CONTAINER_NAME@
+
+    cert:
+        restart: ${CERT_RESTART}
+        image: kvaps/letsencrypt-webroot
+        volumes:
+            - ./cert:/etc/letsencrypt
+            - ./src/www:/www
+        links:
+            - web
+        environment:
+            - DOMAINS
+            - EMAIL
+            - WEBROOT_PATH=/www
+            - EXP_LIMIT=30
+            - CHECK_FREQ=30

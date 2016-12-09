@@ -1,0 +1,35 @@
+{% extends 'chariot/base.html' %}
+
+{% load url from future %}
+
+{% block scripts %}
+	<script>
+	    var fragmentURL = "{% url 'deployments:fragment' 1234 %}";
+	</script>
+
+	<script src="/scripts/jquery-3.1.1.min.js"></script>
+	<script src="/scripts/deployment_refresh.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="mdl-grid" style="padding-bottom: 72px">
+	{% for deployment in deployments %}
+		<a href="{% url 'deployments:update' deployment.id %}" style="text-decoration: none" class="mdl-card mdl-shadow--2dp mdl-cell mdl-cell--6-col mdl-cell--1-offset-tablet" data-deployment="{{deployment.id}}">
+			{% include "deployments/deployment_fragment.html" with deployment=deployment firstload=firstload %}
+		</a>
+	{% empty %}
+	<div class="mdl-typography--text-center">
+		No deployments active!
+	</div>
+	{% endfor %}
+</div>
+{% endblock %}
+
+{% block fab %}
+<a href="{% url 'deployments:create' %}"
+   class="mdl-button mdl-js-button mdl-button--fab mdl-js-ripple-effect mdl-button--colored"
+   style="position: fixed; right: 32px; bottom: 32px; z-index: 100;"
+   title="Add Deployment">
+	<i class="material-icons">add</i>
+</a>
+{% endblock %}

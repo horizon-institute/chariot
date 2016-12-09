@@ -1,0 +1,64 @@
+{% extends 'chariot/base.html' %}
+
+{% load url from future %}
+
+{% block title %}
+Devices
+{% endblock %}
+
+{% block content %}
+<div class="mdl-grid">
+	<ul class="mdl-cell mdl-cell--6-col mdl-cell--1-offset-tablet mdl-list">
+		{% for hub in hubs %}
+			<li class="mdl-list__item mdl-list__item--two-line">
+				<div class="mdl-list__item-primary-content {% if not sensor_deployment_details.connection_status.0 %}panel-danger{% else %}panel-default{% endif %}">
+					<i class="material-icons mdl-list__item-icon">device_hub</i>
+					{% if 'hub' in hub.name|lower %}
+						<span>{{ hub.name }}</span>
+					{% else %}
+						<span>Hub {{ hub.name }}</span>
+					{% endif %}
+					<span class="mdl-list__item-sub-title">{{ hub.mac_address }}</span>
+				</div>
+				<div class="mdl-list__item-secondary-content">
+					<span class="mdl-list__item-secondary-info">
+						{{ hub.connection_status.1 }}
+						{% if hub.connection_status.2 %}
+						for {{ hub.connection_status.2 }}
+						{% endif %}
+		            </span>
+				</div>
+			</li>
+		{% empty %}
+			<div class="mdl-typography--text-center">
+				No Hubs
+			</div>
+		{% endfor %}
+	</ul>
+	<ul class="mdl-cell mdl-cell--6-col mdl-cell--1-offset-tablet mdl-list">
+		{% for sensor in object_list %}
+		<li class="mdl-list__item mdl-list__item--two-line">
+			<div class="mdl-list__item-primary-content {% if not sensor_deployment_details.connection_status.0 %}panel-danger{% else %}panel-default{% endif %}">
+				<i class="material-icons mdl-list__item-icon">router</i>
+				<span>{{ sensor.name|default:"Sensor" }} <span style="color: #888;">({{ sensor.identifier }})</span></span>
+				<span class="mdl-list__item-sub-title">{{ sensor.channels.all|join:", " }}</span>
+			</div>
+		</li>
+		{% empty %}
+		<div class="mdl-typography--text-center">
+			No Sensors
+		</div>
+		{% endfor %}
+	</ul>
+</div>
+{% endblock %}
+
+{% block fab %}
+<a href="{% url 'create_hub' %}"
+   class="mdl-button mdl-js-button mdl-button--fab mdl-js-ripple-effect mdl-button--colored"
+   style="position: fixed; right: 32px; bottom: 32px; z-index: 100;"
+   title="Create Hub">
+	<i class="material-icons">add</i>
+</a>
+{% endblock %}
+

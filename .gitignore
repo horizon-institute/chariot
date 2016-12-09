@@ -1,0 +1,7 @@
+*.pyc
+/cert/
+/.idea/
+/node_modules/
+/npm-debug.log
+error.html
+/.env

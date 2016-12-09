@@ -1,0 +1,120 @@
+{% load crispy_forms_field %}
+
+{% if field.is_hidden %}
+    {{ field }}
+{% else %}
+    <div id="div_{{ field.auto_id }}" class="{% if wrapper_class %} {{ wrapper_class }}{% endif %}{% if field.errors and form_show_errors %} error{% endif %}{% if field|is_checkbox %} checkbox{% endif %}{% if field.css_classes %} {{ field.css_classes }}{% endif %}">
+		{% if field|is_checkboxselectmultiple %}
+	        {% if field.label %}
+		        <div style="margin-top: 8px; margin-bottom: 4px"
+			        class="mdl-typography--caption mdl-color-text--primary {% if field.field.required %}requiredField{% endif %}">
+	                {{ field.label|safe }}
+	            </div>
+		    {% endif %}
+
+		    {% for choice in field.field.choices %}
+		        <label class="mdl-checkbox mdl-js-checkbox mdl-js-ripple-effect" for="id_{{ field.html_name }}_{{ forloop.counter }}">
+	                <input type="checkbox" id="id_{{ field.html_name }}_{{ forloop.counter }}" class="mdl-checkbox__input" name="{{ field.html_name }}" value="{{ choice.0 }}">
+	                <span class="mdl-checkbox__label">{{ choice.1 }}</span>
+				</label>
+		    {% endfor %}
+
+	        {% if form_show_errors %}
+	            {% for error in field.errors %}
+	                <p id="error_{{ forloop.counter }}_{{ field.auto_id }}" class="errorField">
+	                    {{ error }}
+	                </p>
+	            {% endfor %}
+	        {% endif %}
+	    {% elif field|is_checkbox %}
+	    	<label class="mdl-checkbox mdl-js-checkbox mdl-js-ripple-effect" for="{{ field.id_for_label }}">
+			    {% crispy_field field 'class' 'mdl-checkbox__input' %}
+	            <span class="mdl-checkbox__label">{{ choice.1 }}</span>
+			</label>
+	    {% elif field|is_select %}
+		    <div style="padding-top: 8px" class="mdl-textfield mdl-js-textfield {% if wrapper_class %} {{ wrapper_class }}{% endif %}{% if field.errors and form_show_errors %} is-invalid{% endif %}{% if field|is_checkbox %} checkbox{% endif %}{% if field.css_classes %} {{ field.css_classes }}{% endif %}">
+	        {% if field.label %}
+		        <label
+
+				        class="mdl-typography--caption mdl-color-text--primary {% if field.field.required %}requiredField{% endif %}"
+		            for="{{ field.id_for_label }}">
+	                {{ field.label|safe }}
+	            </label>
+		    {% endif %}
+			<label class="mdl-textfield__label"></label>
+			<div><i class="material-icons" style="position: absolute; right: 0px; z-index: -10;">arrow_drop_down</i>
+            {% crispy_field field 'class' 'mdl-textfield__input' 'style' '-webkit-appearance: none; -moz-appearance: none; appearance: none; padding-right: 24px; border-radius: 0' %}
+			</div>
+
+	        {% if form_show_errors %}
+	            {% for error in field.errors %}
+	                <p id="error_{{ forloop.counter }}_{{ field.auto_id }}" class="errorField">
+	                    {{ error }}
+	                </p>
+	            {% endfor %}
+	        {% endif %}
+			    </div>
+		{% elif field|is_file %}
+	        {% if field.label %}
+		        <label id="label_{{ field.id_for_label }}"
+				        class="mdl-typography--title deployment-header mdl-color--blue-900"
+				       {% if field.value %}
+				       style="background-image: url('{{MEDIA_URL}}{{ field.value }}')"
+				       {% endif %}
+		            for="{{ field.id_for_label }}">
+			        <i class="material-icons">file_upload</i>
+	                {{ field.label|safe }}
+	            </label>
+		    {% endif %}
+
+	        <div style="display: none">
+            {% crispy_field field 'accept' 'image/*' %}
+	        </div>
+
+	        <script>
+		        var input = document.getElementById('{{ field.id_for_label }}');
+				input.onchange = function () {
+				    var label = document.getElementById('label_{{ field.id_for_label }}');
+				    if(this.files.length > 0) {
+				        label.innerHTML = '{{ field.label|safe }}: ' + this.files[0].name;
+				    }
+				    else {
+				        label.innerHTML = '{{ field.label|safe }}';
+				    }
+				};
+			</script>
+
+	        {% if form_show_errors %}
+	            {% for error in field.errors %}
+	                <p id="error_{{ forloop.counter }}_{{ field.auto_id }}" class="errorField">
+	                    {{ error }}
+	                </p>
+	            {% endfor %}
+	        {% endif %}
+		{% else %}
+		    <div
+		         class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label {% if wrapper_class %} {{ wrapper_class }}{% endif %}{% if field.errors and form_show_errors %} is-invalid{% endif %}{% if field|is_checkbox %} checkbox{% endif %}{% if field.css_classes %} {{ field.css_classes }}{% endif %}">
+		        {% if field.label %}
+		            <label for="{{ field.id_for_label }}" class="mdl-textfield__label {% if field.field.required %}requiredField{% endif %}">
+		                {{ field.label|safe }}
+		            </label>
+		        {% endif %}
+
+	            {% crispy_field field 'class' 'mdl-textfield__input' %}
+
+			    {% if form_show_errors %}
+		            {% for error in field.errors %}
+		                <span class="mdl-textfield__error" id="error_{{ forloop.counter }}_{{ field.auto_id }}">
+		                    {{ error }}
+		                </span>
+		            {% endfor %}
+		        {% endif %}
+		    </div>
+		{% endif %}
+
+		{% if field.help_text %}
+            <div style="margin-top: -18px; margin-bottom: 16px;"
+                 class="mdl-typography--caption-color-contrast mdl-typography--text-right">{{ field.help_text|safe }}</div>
+        {% endif %}
+	</div>
+{% endif %}

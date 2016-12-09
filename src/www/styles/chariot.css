@@ -1,0 +1,80 @@
+html, body {
+  position: fixed;
+}
+
+#account-menu {
+	margin-left: 16px;
+}
+
+.mdl-textfield {
+	width: 100% !important;
+}
+
+.uniForm {
+    display: flex;
+    flex-direction: column;
+}
+
+.button_right {
+	align-self: flex-end;
+}
+
+.device-item {
+    display: flex;
+    align-items: center;
+	font-size:16px;
+	font-weight:400;
+	line-height:1;
+}
+
+.device-item input {
+	border: 0;
+	padding: 0;
+	border-bottom: #FFF 2px solid;
+	font-size: 16px;
+}
+
+.device-item input:hover {
+	border-bottom: rgba(0,0,0,.05) 2px solid;
+}
+
+.device-item input:focus {
+	border-bottom: rgb(33,150,243) 2px solid;
+	outline: none;
+}
+
+
+.device-item .material-icons {
+	color: #757575;
+	padding: 16px 24px 16px 0;
+}
+
+.device-item .mdl-textfield {
+}
+
+.mdl-textfield__input {
+	border-radius: 0;
+}
+
+label.deployment-header {
+	cursor: pointer;
+}
+
+label.deployment-header:hover {
+	opacity: 0.8;
+}
+
+label.deployment-header .material-icons {
+	margin-bottom: -3px;
+	margin-right: 8px;
+}
+
+.deployment-header {
+	display: flex;
+	color: #FFF;
+	height: 100px;
+	padding: 16px;
+	align-items: flex-end;
+	background-size: 100%;
+	background-position: center;
+}

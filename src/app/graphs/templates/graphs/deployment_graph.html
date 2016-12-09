@@ -1,0 +1,99 @@
+{% extends 'chariot/base.html' %}
+
+{% load url from future %}
+
+{% block scripts %}
+<script type="text/javascript">
+	var GROUP_URL = "{% url 'graphs:devices' deployment.id %}";
+	var ANNOTATION_URL = "{% url 'deployments:annotation-create' %}";
+	var DEPLOYMENT_ID = {{ deployment.id }};
+	var server_url = '{{ ROOT_URL }}/';
+	var dataStart = '{{ dateFrom }}';
+	var dataEnd = '{{ dateTo }}';
+</script>
+<script src="/scripts/moment.min.js"></script>
+<!--  JQUERY -->
+<script src="/scripts/jquery-3.1.1.min.js"></script>
+<script src="/scripts/jquery-ui.min.js"></script>
+<script src="/scripts/jquery.daterangepicker.min.js"></script>
+<link rel="stylesheet" href="/styles/jquery-ui.min.css">
+<link rel="stylesheet" href="/styles/daterangepicker.min.css">
+<!--- D3 --->
+<script src="/scripts/d3.v3.js"></script>
+<script src="/scripts/d3.time.js"></script>
+<!-- FE scripts and CSS -->
+<script src="/scripts/fe.datastore.js"></script>
+<script src="/scripts/fe.logger.js"></script>
+<script src="/scripts/fe.logger.plot.js"></script>
+<script src="/scripts/fe.logger.annotation.carpet.js"></script>
+<script src="/scripts/fe.logger.selection.rubberband.js"></script>
+<script src="/scripts/sd_store.dataloader.js"></script>
+<!-- Javascript -->
+<script src="/scripts/graph.js"></script>
+<link rel="stylesheet" href="/styles/graph.css">
+{% endblock %}
+
+{% block docTitle %}{{ deployment.client_name }} Deployment Graph{% endblock %}
+{% block title %}{{ deployment.client_name }} Deployment{% endblock %}
+
+{% block toolbar %}
+<button id="dateFilter" type="button" class="mdl-button mdl-js-button">
+	All Dates
+</button>
+
+<button id="zoomIn" type="button" class="mdl-button mdl-js-button mdl-button--icon" title="Zoom In">
+	<i class="material-icons">zoom_in</i>
+</button>
+<button id="zoomOut" type="button" class="mdl-button mdl-js-button mdl-button--icon" title="Zoom Out">
+	<i class="material-icons">zoom_out</i>
+</button>
+{% endblock %}
+
+{% block content %}
+<div id="load-spinner">
+	<div class="mdl-spinner mdl-js-spinner is-active"></div>
+</div>
+
+<div id="chart"></div>
+
+<div style="overflow-y: auto">
+	<div id="axisMenu" style="padding-top: 16px"></div>
+
+	<div id="toggleAnnotations" class="visibility-item">
+		<i class="material-icons">visibility</i>
+		<div>Annotations</div>
+	</div>
+
+	<div id="visibilityMenu"></div>
+</div>
+
+<form id="annotations-edit-dialog">
+	{% csrf_token %}
+	<input type="hidden" id="an_deployment" name="deployment"/>
+	<input type="hidden" id="an_annotation"/>
+	<input type="hidden" id="an_layer" name="layer"/>
+	<input type="hidden" id="an_start" name="start"/>
+	<input type="hidden" id="an_end" name="end"/>
+	<div class="mdl-shadow--2dp" style="background: #FFF">
+	<div style="padding: 16px">
+		<div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+			<label for="an_text" class="mdl-textfield__label">Annotation</label>
+			<input name="text" type="text" class="mdl-textfield__input" id="an_text" autocomplete="off">
+		</div>
+	</div>
+	<div style="display: flex; justify-content: flex-end; padding: 4px;">
+		<button id="annotation-delete" type="button" class="mdl-button mdl-js-button">Delete</button>
+		<button id="annotation-save" type="submit" class="mdl-button mdl-js-button mdl-button--primary">Save
+		</button>
+	</div>
+	</div>
+</form>
+
+<button id="addAnnotation"
+        class="mdl-button mdl-js-button mdl-button--fab mdl-js-ripple-effect mdl-button--colored"
+        title="Add Deployment">
+	<i class="material-icons">add</i>
+</button>
+
+<div id="svg-temp" hidden>test</div>
+{% endblock %}

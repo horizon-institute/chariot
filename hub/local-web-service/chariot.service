@@ -1,0 +1,13 @@
+[Unit]
+Description=chariot service
+After=network.target
+
+[Service]
+User=root
+Restart=always
+RestartSec=3
+
+ExecStart=/usr/bin/node /home/pi/chariot/hub/local-web-service/app.js
+
+[Install]
+WantedBy=multi-user.target

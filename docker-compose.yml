@@ -15,6 +15,7 @@ services:
         volumes:
             - ./src/app:/app
             - /media
+            - /static
 
     web:
         restart: always

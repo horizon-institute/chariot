@@ -13,23 +13,6 @@ $(function () {
 		fe.logger = {};
 	}
 
-	function normaliseKernel(a) {
-		function arraySum(a) {
-			var s = 0;
-			for (var i = 0; i < a.length; i++) {
-				s += a[i];
-			}
-			return s;
-		}
-
-		var sum_a = arraySum(a);
-		var scale_factor = sum_a / 1;
-		a = a.map(function (d) {
-			return d / scale_factor;
-		});
-		return a;
-	}
-
 	fe.datastore = (function () {
 		var data_sets = [];
 		var annotations = {};
@@ -86,28 +69,23 @@ $(function () {
 		};
 
 		var build_dataset = function (data, colour) {
-			var kernel = normaliseKernel([0.1, 0.2, 0.3, 0.2, 0.1]);
-
 			var dataset = {};
-			dataset.y_max = Math.max(d3.max(data.readings, function (d) {
-				return d.value;
-			}), 0);
-			dataset.y_max = Math.max(1.0, dataset.y_max);
-			dataset.y_min = d3.min(data.readings, function (d) {
+			dataset.y_max = d3.max(data.data, function (d) {
 				return d.value;
 			});
-			dataset.x_max = data.readings[data.readings.length - 1].t;
-			dataset.x_min = data.readings[0].t;
-			dataset.data = data.readings;
-			dataset.channel = data.channel.id;
-			dataset.sensor = data.sensor.id;
-			dataset.units = data.channel.units;
-
-			console.log(data.channel);
+			dataset.y_min = d3.min(data.data, function (d) {
+				return d.value;
+			});
+			dataset.x_max = data.data[data.data.length - 1].t;
+			dataset.x_min = data.data[0].t;
+			dataset.data = data.data;
+			dataset.channel = data.id;
+			dataset.sensor = data.sensor_id;
+			dataset.units = data.units;
 
 			// These properties are more for view purposes.
 			dataset.colour = colour;
-			dataset.name = data.channel.name;
+			dataset.name = data.name;
 			// Whether there's a selected portion.
 			dataset.selected = false;
 			// Whether the dataset is actually visible on the graph.
@@ -129,11 +107,14 @@ $(function () {
 			});
 
 			var pos = 0;
-			$.each(data.readings, function (index, datum) {
-				if (datum.readings.length > 0) {
-					fe.datastore.add_dataset(datum, settings.colours[pos % settings.colours.length]);
-				}
-				pos++;
+			$.each(data.sensors, function (index, sensor) {
+				$.each(sensor.channels, function(index, channel) {
+					if (channel.data.length > 0) {
+						channel.sensor_id = sensor.id;
+						fe.datastore.add_dataset(channel, settings.colours[pos % settings.colours.length]);
+						pos++;
+					}
+				});
 			});
 		};
 

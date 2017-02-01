@@ -1,11 +1,9 @@
-
-
 def getSquareDistance(p1, p2):
     """
     Square distance between two points
     """
-    dx = p1['t'] - p2['t']
-    dy = p1['value'] - p2['value']
+    dx = p1['x'] - p2['x']
+    dy = p1['y'] - p2['y']
 
     return dx * dx + dy * dy
 
@@ -14,24 +12,24 @@ def getSquareSegmentDistance(p, p1, p2):
     """
     Square distance between point and a segment
     """
-    x = p1['t']
-    y = p1['value']
+    x = p1['x']
+    y = p1['y']
 
-    dx = p2['t'] - x
-    dy = p2['value'] - y
+    dx = p2['x'] - x
+    dy = p2['y'] - y
 
     if dx != 0 or dy != 0:
-        t = ((p['t'] - x) * dx + (p['value'] - y) * dy) / (dx * dx + dy * dy)
+        t = ((p['x'] - x) * dx + (p['y'] - y) * dy) / (dx * dx + dy * dy)
 
         if t > 1:
-            x = p2['t']
-            y = p2['value']
+            x = p2['x']
+            y = p2['y']
         elif t > 0:
             x += dx * t
             y += dy * t
 
-    dx = p['t'] - x
-    dy = p['value'] - y
+    dx = p['x'] - x
+    dy = p['y'] - y
 
     return dx * dx + dy * dy
 
@@ -113,6 +111,4 @@ def simplify(points, tolerance=0.1, highestQuality=True):
     if not highestQuality:
         points = simplifyRadialDistance(points, sqtolerance)
 
-    points = simplifyDouglasPeucker(points, sqtolerance)
-
-    return points
+    return simplifyDouglasPeucker(points, sqtolerance)

@@ -6,15 +6,12 @@ if (!fe) {
 $(function () {
     'use strict';
 
-    var m_plot = null,
-        settings;
+    var settings;
 
     var methods = {
     	init: function(options) {
-		    
-		    var selector = this;
-		    m_plot = fe.logger.plot;
 
+		    var selector = this;
 		    settings = $.extend({
 		    	antievents: true,
 		    	handles: true,
@@ -54,29 +51,12 @@ $(function () {
 		    }, options);
 
 	    	fe.logger.plot.init(selector, settings);
-		    
-		    //-------------------------------------------------------
-		    
-		    $('.nav .logger').addClass('selected');
-
 		    return this;
-    	},
-    	filterChannels: function(channels) {
-    		fe.logger.plot.filter_channels(channels);
-    		fe.logger.plot.redraw();
-    		fe.logger.plot.redraw_selection();
     	}
     };
 
-    $.fn.logger = function(methodOrOptions) {
-		console.log(methodOrOptions);
-    	if(methods[methodOrOptions]) {
-    		return methods[methodOrOptions].apply(this, Array.prototype.slice.call(arguments, 1));
-    	}
-    	else if(typeof methodOrOptions === 'object' || !methodOrOptions) {
-			console.log(methods);
-    		return methods.init.apply(this, arguments);
-    	}
+    $.fn.logger = function(options) {
+   		return methods.init.apply(this, options);
 	};
 });
 

@@ -69,7 +69,10 @@ fetch(url + '/api/hub/' + mac_addresses[0] + '/token')
 						.then(function (response) {
 							assert(response.ok, response.status + ': ' + response.statusText + ' ' + response.url);
 							process.stdout.write(".");
-						});
+                        })
+						.catch(function (err) {
+		                    console.log('Error ' + err.message);
+	                    });
 
 					break;
 				}

@@ -8,7 +8,7 @@ from django.utils.translation import ugettext_lazy as _
 from django_extensions.db.models import TimeStampedModel
 
 from hubs.models import Hub
-from sensors.models import Sensor, SensorReading
+from sensors.models import Sensor, SensorReading, Channel
 
 
 class Deployment(TimeStampedModel):
@@ -19,8 +19,8 @@ class Deployment(TimeStampedModel):
 
     photo = models.ImageField(_('Header Image'), upload_to='deployment_photos', null=True, blank=True)
 
-    gas_pence_per_kwh = models.IntegerField(default=0)
-    elec_pence_per_kwh = models.IntegerField(default=0)
+    gas_pence_per_kwh = models.FloatField(default=0)
+    elec_pence_per_kwh = models.FloatField(default=0)
 
     start_date = models.DateTimeField(null=True)
     end_date = models.DateTimeField(null=True)
@@ -65,6 +65,20 @@ class Deployment(TimeStampedModel):
                 return 2, 'Deployment not running'
 
         return 1, 'Details Incomplete'
+
+
+class DeploymentChannelCost(TimeStampedModel):
+    deployment = models.ForeignKey(Deployment)
+    channel = models.ForeignKey(Channel)
+    cost = models.FloatField()
+
+    class Meta:
+        unique_together = ("deployment", "channel")
+
+
+class DeploymentDataCache(TimeStampedModel):
+    deployment = models.OneToOneField(Deployment, primary_key=True)
+    data = models.TextField()
 
 
 class DeploymentAnnotation(TimeStampedModel):
@@ -143,3 +157,15 @@ class DeploymentSensor(TimeStampedModel):
                 pass
 
         super(DeploymentSensor, self).save(*args, **kwargs)
+
+
+class DeploymentSensorReading(models.Model):
+    deployment = models.ForeignKey(Deployment, db_index=True)
+    sensor = models.ForeignKey(Sensor, db_index=True)
+    channel = models.ForeignKey(Channel, db_index=True)
+    timestamp = models.FloatField(db_index=True)
+    value = models.FloatField(_('value'), default=0)
+    important = models.BooleanField(db_index=True, default=True)
+
+    class Meta:
+        ordering = ['timestamp']

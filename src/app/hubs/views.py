@@ -1,6 +1,7 @@
 # encoding:UTF-8
 import logging
 
+from datetime import datetime,timedelta
 from django.core.urlresolvers import reverse
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
@@ -11,10 +12,13 @@ from rest_framework import status, serializers, authentication
 from rest_framework.authtoken.models import Token
 from rest_framework.generics import CreateAPIView, ListAPIView, UpdateAPIView
 from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from chariot import utils
 from chariot.mixins import LoginRequiredMixin, BackButtonMixin
-from deployments.models import Deployment, DeploymentSensor
+from chariot.utils import LOCALE_DATE_FMT
+from deployments.models import Deployment, DeploymentSensor, DeploymentDataCache
+from graphs.views import generate_data
 from hubs.forms import HubCreateForm
 from hubs.models import Hub
 from hubs.serializers import HubSerializer, HubIDSerializer
@@ -162,6 +166,14 @@ class SensorReadingCreateView(CreateAPIView):
 
             deployment_details.sensor_readings.add(self.object)
 
+            try:
+                cached = DeploymentDataCache.objects.get(deployment=hub.deployment)
+                cache_time = cached.created
+                if (self.object.timestamp - cache_time) > timedelta(hours=1):
+                    cached.delete()
+            except DeploymentDataCache.DoesNotExist:
+                pass
+
             return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -176,3 +188,57 @@ class HubCreateView(LoginRequiredMixin, BackButtonMixin, CreateView):
 
     def get_back_url(self):
         return reverse('devices')
+
+
+class DataView(APIView):
+    authentication_classes = (authentication.TokenAuthentication,)
+
+    def get(self, request, pk, format=None):
+        out = []
+        deployment = Deployment.objects.get(pk=pk)
+
+        show_hidden = 'channels' in request.GET and request.GET['channels'].lower() == 'all'
+        simplify = 'simplify' not in request.GET or request.GET['simplify'].lower() != 'false'
+        if 'start' in request.GET:
+            start = datetime.strptime(request.GET['start'], LOCALE_DATE_FMT)
+        else:
+            start = None
+
+        if 'end' in request.GET:
+            end = datetime.strptime(request.GET['end'], LOCALE_DATE_FMT)
+        else:
+            end = None
+
+        sensor_list = None
+        if 'sensors' in request.GET:
+            sensor_list = request.GET['sensors'].split(",")
+
+        channel_list = None
+        show_hidden = False
+        if 'channels' in request.GET:
+            if request.GET['channels'].lower() == 'all':
+                show_hidden = True
+            else:
+                channel_list = request.GET['channels'].split(",")
+
+        for sensor in deployment.sensors.all():
+            if not sensor_list or str(sensor.id) in sensor_list:
+                sensor_obj = {
+                    'name': sensor.name,
+                    'location': sensor.deployment_details.filter(deployment__pk=pk)[0].location,
+                    'channels': [],
+                    'id': sensor.id}
+                for channel in sensor.channels.all():
+                    if (channel_list and channel.name in channel_list) or (not channel_list and (not channel.hidden or show_hidden)):
+                        channel_obj = {
+                            'id': channel.id,
+                            'name': channel.name,
+                            'friendly_name': channel.friendly_name,
+                            'data': generate_data(deployment, sensor, channel, simplify, start, end),
+                            'units': channel.units}
+                        sensor_obj['channels'].append(channel_obj)
+
+                if sensor_list or len(sensor_obj['channels']) > 0:
+                    out.append(sensor_obj)
+
+        return HttpResponse(json.dumps(out), content_type='application/json')

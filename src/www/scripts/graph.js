@@ -1,4 +1,3 @@
-var debugMode = true;
 var filtered_channels = [];
 var selected_axis_l;
 var selected_axis_r;
@@ -9,7 +8,7 @@ var zooms = [];
 
 function qs(key) {
 	key = key.replace(/[*+?^$.\[\]{}()|\\\/]/g, "\\$&"); // escape RegEx meta chars
-	var match = location.search.match(new RegExp("[?&]"+key+"=([^&]+)(&|$)"));
+	var match = location.search.match(new RegExp("[?&]" + key + "=([^&]+)(&|$)"));
 	return match && decodeURIComponent(match[1].replace(/\+/g, " "));
 }
 
@@ -28,7 +27,11 @@ $(document).ready(function () {
 		}
 		else if (params.button == 'create_selection') {
 			$("#zoomIn").prop("disabled", false);
-			$("#addAnnotation").show();
+			var annotationItem = $('#toggleAnnotations');
+			var annotations = annotationItem.data('show');
+			if(annotations) {
+				$("#addAnnotation").show();
+			}
 		}
 	});
 
@@ -46,15 +49,27 @@ $(document).ready(function () {
 			endDate: moment(dataEnd).format('D MMM YYYY')
 		})
 		.bind('datepicker-change', function (event, obj) {
-			zooms = [];
-			$("#zoomOut").prop("disabled", true);
-			update_date_range(moment(obj.date1).startOf('day'), moment(obj.date2).endOf('day'));
+			var startDay = moment(obj.date1).startOf('day');
+			var endDay = moment(obj.date2).endOf('day');
+			var dataStartDay = moment(dataStart).startOf('day');
+			var dataEndDay = moment(dataEnd).endOf('day');
+			if (!startDay.isSame(dataStartDay) || !endDay.isSame(dataEndDay)) {
+				zooms = [{
+					startDate: dataStartDay,
+					endDate: dataEndDay
+				}];
+				$("#zoomOut").prop("disabled", false);
+			}
+			else {
+				zooms = [];
+				$("#zoomOut").prop("disabled", true);
+			}
+			update_date_range(startDay, endDay);
 		});
 
 	$('#addAnnotation')
 		.hide()
 		.click(function (event) {
-			debug('addAnnotation called');
 			var plot = fe.logger.plot;
 			var selection = plot.get_selection();
 			if (selection.w > 0) {
@@ -78,7 +93,6 @@ $(document).ready(function () {
 		.hide()
 		.data('show', true)
 		.click(function () {
-			debug('showAnnotations called');
 			var annotationItem = $('#toggleAnnotations');
 			var annotations = annotationItem.data('show');
 			if (annotations) {
@@ -101,12 +115,11 @@ $(document).ready(function () {
 					.removeAttr('style')
 					.text('visibility');
 			}
-			debug(annotations);
 		});
 
 	$("#zoomIn").click(function () {
 		var selection = fe.logger.plot.get_selection();
-		if (selection.x > 0 && selection.w > 0) {
+		if (selection.w > 0) {
 			zooms.push({
 				startDate: startDate,
 				endDate: endDate
@@ -156,7 +169,7 @@ var update_date_range = function (start, end) {
 		$('#dateFilter').text(obj.value);
 	}
 
-	$('#load-spinner').fadeIn();
+	//$('#load-spinner').fadeIn();
 	fe.logger.plot.load_data(startDate, endDate, rebuild_view);
 };
 
@@ -179,7 +192,7 @@ function build_menu(sensors) {
 	var channels = {};
 	$.each(sensors, function (i, device) {
 		$.each(device.channels, function (j, channel) {
-			if(channel.stats.value__avg != null) {
+			if (channel.data.length > 1) {
 				channels[channel.id] = channel;
 			}
 		});
@@ -215,7 +228,7 @@ function build_menu(sensors) {
 
 		$.each(sensors, function (i, device) {
 			$.each(device.channels, function (j, stream) {
-				if (stream.id === channel.id && stream.stats.value__avg !== null) {
+				if (stream.id === channel.id && stream.data.length > 1) {
 					var key = "" + device.id + ":" + stream.id;
 					var selected = true;
 					var filterIcon = 'visibility';
@@ -225,13 +238,42 @@ function build_menu(sensors) {
 						filterIcon = 'visibility_off';
 					}
 
+					var value_min = null;
+					var value_max = null;
+					var value_avg = 0;
+					var avg_duration = 0;
+					var previous = null;
+					$.each(stream.data, function (i, dataItem) {
+						if (value_min == null || dataItem.value < value_min) {
+							value_min = dataItem.value;
+						}
+						if (value_max == null || dataItem.value > value_max) {
+							value_max = dataItem.value;
+						}
+
+						if(previous != null) {
+							var prev_duration = dataItem.t - previous.t;
+							var total_duration = prev_duration + avg_duration;
+
+							var avg = (previous.value + dataItem.value) / 2;
+							value_avg = ((avg * prev_duration) + (value_avg * avg_duration)) / total_duration;
+							avg_duration = total_duration;
+						}
+						previous = dataItem;
+					});
+
 					var content = $('<div></div>')
-						.append('<div>' + (device.location || device.name || 'Sensor') + '</div>')
-						.append('<div class="mdl-typography--caption-color-contrast">' +
-							stream.stats.value__min.toFixed(2) + stream.units + ' – ' +
-							stream.stats.value__max.toFixed(2) + stream.units + '</div>')
-						.append('<div class="mdl-typography--caption-color-contrast">' +
-							' Avg: ' + stream.stats.value__avg.toFixed(2) + stream.units + '</div>');
+						.append('<div>' + (device.location || device.name || 'Sensor') + '</div>');
+					if (value_min != null && value_max != null) {
+						content.append('<div class="mdl-typography--caption-color-contrast">' +
+							value_min.toFixed(2) + stream.units + ' – ' +
+							value_max.toFixed(2) + stream.units +
+							'</div>')
+							.append('<div class="mdl-typography--caption-color-contrast">' +
+								' Avg: ' + value_avg.toFixed(2) + stream.units +
+								'</div>');
+					}
+
 
 					var elem = $('<div></div>')
 						.addClass('visibility-item')
@@ -250,7 +292,7 @@ function build_menu(sensors) {
 							update_item_visibility(item, selected);
 							item.data('selected', selected);
 
-							if(selected) {
+							if (selected) {
 								var index = filtered_channels.indexOf(key);
 								if (index > -1) {
 									filtered_channels.splice(index, 1);
@@ -407,21 +449,11 @@ function filter_streams() {
 		var filt = {'sensor': $this.data('sensor-ref'), 'channel': $this.data('channel-id')};
 		channels.push(filt);
 	});
-	$("#chart").logger("filterChannels", channels);
-}
-
-function debug(string) {
-	if (debugMode) {
-		console.log(string);
-	}
+	fe.logger.plot.filter_channels(channels);
 }
 
 function show_annotation_editor(annotation) {
-	debug('show_annotations_editor called');
-	debug(annotation);
-
 	$('#an_layer').val(annotation.layer);
-	$('#an_text').val(annotation.text);
 	$('#an_start').val(moment(annotation.start).format('DD/MM/YYYY HH:mm:ss'));
 	$('#an_end').val(moment(annotation.end).format('DD/MM/YYYY HH:mm:ss'));
 	$('#an_deployment').val(DEPLOYMENT_ID);
@@ -467,5 +499,6 @@ function show_annotation_editor(annotation) {
 		.hide()
 		.fadeIn();
 
-	$('#an_text').focus();
+	$('#an_text').val(annotation.text)
+		.focus();
 }

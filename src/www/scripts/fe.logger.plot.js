@@ -1,7 +1,3 @@
-/**
- *
- */
-
 var fe;
 
 $(function () {
@@ -18,6 +14,7 @@ $(function () {
 	fe.logger.plot = (function () {
 		var chart;
 
+		var raw_data = null;
 		var w, h;
 		var xSc;
 		var axis_channel_l;
@@ -41,7 +38,6 @@ $(function () {
 		}
 
 		function draw(data) {
-			redraw();
 			fe.datastore.load(data, settings);
 			redraw();
 		}
@@ -55,7 +51,7 @@ $(function () {
 		};
 
 		var filter_channels = function (state) {
-			// Currently very inefficient!
+			// TODO Currently very inefficient!
 			var datasets = fe.datastore.get_datasets();
 			$.each(datasets, function (index, dataset) {
 				var found = false;
@@ -66,6 +62,8 @@ $(function () {
 				});
 				dataset.visible = found;
 			});
+			redraw();
+			redraw_selection();
 		};
 
 		var set_axis_channel = function (channel, left) {
@@ -138,15 +136,11 @@ $(function () {
 			y_max = Math.ceil(y_max / 10) * 10;
 			y_min = Math.floor(y_min / 10) * 10;
 
-			// y_max = Math.floor((y_max+pad)/10)*10;
-			// y_min = Math.floor((y_min-pad)/10)*10;
-
 			return [y_min, y_max];
 		};
 
 		var redraw = function () {
 			var data;
-			// always_on = loader.always_on(), 
 
 			w = get_width();
 			h = get_height();
@@ -204,12 +198,12 @@ $(function () {
 					.attr("y", h + 2 + 15)
 					.attr("text-anchor", "middle")
 					.text(function (d) {
-						return d3.time.format("%H:%M")(d);
+						return moment(d).format("H:mm");
 					});
 
 				// draw a new row of horizontal axis labels
 				chart.selectAll(".xRule2")
-					.data(xSc.ticks(10))
+					.data(xSc.ticks(d3.time.days))
 					.enter().append("text")
 					.attr("class", "xRule2")
 					.attr("x", function (d) {
@@ -218,7 +212,7 @@ $(function () {
 					.attr("y", h + 16 + 15)
 					.attr("text-anchor", "middle")
 					.text(function (d) {
-						return d3.time.format("%a %d")(d);
+						return moment(d).format("ddd Do");
 					});
 
 				// draw horizontal axis ticks
@@ -235,36 +229,8 @@ $(function () {
 		};
 
 		var draw_x_grid = function () {
-			var grid_w,
-				grid_data,
-				// functions
-				calc_grid_w;
-
-			grid_data = xSc.ticks(d3.time.hours, 24);
-			var ds0 = fe.datastore.get_datasets()[0];
-			grid_data = [ds0.x_min].concat(grid_data);
-
-			// this uses closure on grid_data
-			/*jslint unparam: true*/
-			calc_grid_w = function (d, i) {
-				var x0, x1;
-				x0 = xSc(grid_data[i]);
-				x1 = xSc(grid_data[i + 1]);
-				if (x1 === undefined || isNaN(x1)) {
-					x1 = xSc.range()[1];
-				}
-				return x1 - x0;
-			};
-			/*jslint unparam: false*/
-
-			grid_w = grid_data.map(calc_grid_w);
-			grid_data = grid_data.map(function (d, i) {
-				return [d, grid_w[i]];
-			});
-
-			// // draw horizontal axis grid
 			chart.selectAll(".xGrid")
-				.data(xSc.ticks(d3.time.hours, 24))
+				.data(xSc.ticks(d3.time.days))
 				.enter().append("line")
 				.attr('class', 'graph-divider')
 				.attr("x1", xSc)
@@ -412,13 +378,11 @@ $(function () {
 				flat_annotations.map(function () {
 					flat_annotations[i].proxy = null;
 					flat_annotations[i].compr = [];
-					var end_date = moment(flat_annotations[i].end).toDate();
-					var start_date = moment(flat_annotations[i].start).toDate();
-					flat_annotations[i].duration = (end_date.getTime() - start_date.getTime()) / 60 / 1000;
+					flat_annotations[i].duration = (flat_annotations[i].end - flat_annotations[i].start) / 60 / 1000;
 					if (selected_layer.ref == flat_annotations[i].layer) {
-						antiEvents[antiEvents.length - 1].end = start_date;
+						antiEvents[antiEvents.length - 1].end = flat_annotations[i].start;
 						antiEvents.push({
-							start: new Date(start_date.getTime() +
+							start: new Date(flat_annotations[i].start +
 								(flat_annotations[i].duration + 2) * 60 * 1000)
 						});
 					}
@@ -441,7 +405,7 @@ $(function () {
 				})
 				.attr("height", h)
 				.attr("width", function (d) {
-					return xSc(d.end.getTime()) - xSc(d.start.getTime());
+					return xSc(d.end) - xSc(d.start);
 				});
 
 			setup_interaction();
@@ -535,10 +499,10 @@ $(function () {
 
 			chart.selectAll('.selection_handle.start.label')
 				.attr("x", x - 5)
-				.text('start: ' + t0.format('hh:mm'));
+				.text('start: ' + t0.format('H:mm'));
 			chart.selectAll('.selection_handle.end.label')
 				.attr("x", x + w + 5)
-				.text('end: ' + t1.format('hh:mm'));
+				.text('end: ' + t1.format('H:mm'));
 		};
 
 		var create_selection = function (x, w, selections, trigger_events) {
@@ -584,7 +548,7 @@ $(function () {
 					.attr("x", selection.x - 5)
 					.attr("fill", "black")
 					.attr("text-anchor", "end")
-					.text('start: ' + t.format('hh:mm'));
+					.text('start: ' + t.format('H:mm'));
 
 				// Draw right drag handle.
 				chart.append('svg:image')
@@ -602,7 +566,7 @@ $(function () {
 					.attr("x", selection.x + selection.w + 5)
 					.attr("fill", "black")
 					.attr("text-anchor", "start")
-					.text('end: ' + t2.format('hh:mm'));
+					.text('end: ' + t2.format('H:mm'));
 
 
 				// Add drag behaviour for handles.
@@ -779,41 +743,53 @@ $(function () {
 			return t;
 		};
 
-		var format_date = function (date) {
-			return moment(date).format('YYYY-MM-DD HH:mm:ss');
+		var filter_data = function(start, end) {
+			// Clone
+			var filteredData = jQuery.extend(true, {}, raw_data);
+			$.each(filteredData.sensors, function (index, sensor) {
+				$.each(sensor.channels, function (index, channel) {
+					channel.data = channel.data.filter(function (value) {
+						return value.t.isBetween(start, end);
+					});
+				});
+			});
+			filteredData.annotations = filteredData.annotations.filter(function (value) {
+				return value.start.isBetween(start, end) || value.end.isBetween(start, end);
+			});
+
+			return filteredData;
 		};
 
 		var load_data = function (start, end, callback) {
-			var params = {
-				start: format_date(start),
-				end: format_date(end)
-			};
-			if(settings.all_channels) {
-				params.channels = 'all';
-			}
+			if(raw_data == null) {
+				$.getJSON(DATA_URL, function (data) {
+					$.each(data.sensors, function (index, sensor) {
+						$.each(sensor.channels, function (index, channel) {
+							$.each(channel.data, function (index, dataItem) {
+								dataItem.t = moment(dataItem.t);
+							});
+						});
+					});
+					$.each(data.annotations, function (index, annotation) {
+						annotation.start = moment(annotation.start);
+						annotation.end = moment(annotation.end);
+					});
 
-			console.log("Load Group");
-			$.getJSON(GROUP_URL, params, function (loaded_data) {
-				console.log(loaded_data);
-				sd_store.dataloader.load({
-					url: server_url + 'graphs/',
-					data: true,
-					sensors: loaded_data.sensors,
-					deployment: DEPLOYMENT_ID,
-					start: params.start,
-					end: params.end
-				}, function (data) {
-					console.log(data);
-					var obj = {};
-					obj.readings = data;
-					obj.annotations = loaded_data.annotations;
-					obj.sensors = loaded_data.sensors;
-					fe.logger.plot.draw(obj);
+					raw_data = data;
+					var filteredData = filter_data(start, end);
+					fe.logger.plot.draw(filteredData);
 					if (callback) {
-						callback(obj);
+						callback(filteredData);
 					}
 				});
-			});
+			}
+			else {
+				var filteredData = filter_data(start, end);
+				fe.logger.plot.draw(filteredData);
+				if (callback) {
+					callback(filteredData);
+				}
+			}
 		};
 
 		// export the API
@@ -841,9 +817,6 @@ $(function () {
 			},
 			get_chart: function () {
 				return get_chart();
-			},
-			redraw_selection: function () {
-				return redraw_selection();
 			},
 			get_time_for_x: function (x) {
 				return get_time_for_x(x);

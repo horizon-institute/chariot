@@ -10,11 +10,10 @@ class Migration(SchemaMigration):
     def forwards(self, orm):
         # Adding model 'Hub'
         db.create_table('hubs_hub', (
-            ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
             ('created', self.gf('django.db.models.fields.DateTimeField')(default=datetime.datetime.now, blank=True)),
             ('modified', self.gf('django.db.models.fields.DateTimeField')(default=datetime.datetime.now, blank=True)),
+            ('id', self.gf('django.db.models.fields.CharField')(max_length=255, primary_key=True)),
             ('name', self.gf('django.db.models.fields.CharField')(max_length=255)),
-            ('mac_address', self.gf('django.db.models.fields.CharField')(max_length=255)),
             ('external_network_address', self.gf('django.db.models.fields.GenericIPAddressField')(max_length=39, null=True, blank=True)),
             ('network_address', self.gf('django.db.models.fields.GenericIPAddressField')(max_length=39, null=True, blank=True)),
             ('online_since', self.gf('django.db.models.fields.DateTimeField')(null=True, blank=True)),
@@ -33,9 +32,8 @@ class Migration(SchemaMigration):
             'Meta': {'ordering': "('-modified', '-created')", 'object_name': 'Hub'},
             'created': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now', 'blank': 'True'}),
             'external_network_address': ('django.db.models.fields.GenericIPAddressField', [], {'max_length': '39', 'null': 'True', 'blank': 'True'}),
-            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'id': ('django.db.models.fields.CharField', [], {'max_length': '255', 'primary_key': 'True'}),
             'last_ping': ('django.db.models.fields.DateTimeField', [], {'null': 'True', 'blank': 'True'}),
-            'mac_address': ('django.db.models.fields.CharField', [], {'max_length': '255'}),
             'modified': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now', 'blank': 'True'}),
             'name': ('django.db.models.fields.CharField', [], {'max_length': '255'}),
             'network_address': ('django.db.models.fields.GenericIPAddressField', [], {'max_length': '39', 'null': 'True', 'blank': 'True'}),

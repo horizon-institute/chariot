@@ -4,14 +4,14 @@ from sensors.models import Sensor, Channel
 
 
 class ChannelSerializer(serializers.ModelSerializer):
-	class Meta:
-		model = Channel
-		fields = ('friendly_name', 'name', 'units')
+    class Meta:
+        model = Channel
+        fields = ('id', 'name', 'units')
 
 
 class SensorIDSerializer(serializers.ModelSerializer):
-	channels = ChannelSerializer()
+    channels = ChannelSerializer()
 
-	class Meta:
-		model = Sensor
-		fields = ('id', 'identifier', 'channels')
+    class Meta:
+        model = Sensor
+        fields = ('id', 'channels')

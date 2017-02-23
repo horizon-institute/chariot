@@ -4,7 +4,6 @@
 
 {% block scripts %}
 <script type="text/javascript">
-	var GROUP_URL = "{% url 'graphs:devices' deployment.id %}";
 	var DATA_URL = "{% url 'graphs:data' deployment.id %}";
 	var ANNOTATION_URL = "{% url 'deployments:annotation-create' %}";
 	var DEPLOYMENT_ID = {{ deployment.id }};

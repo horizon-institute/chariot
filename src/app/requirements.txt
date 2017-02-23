@@ -7,6 +7,7 @@ django-extensions==1.5.5
 django-crispy-forms==1.5.2
 dj-database-url==0.3.0
 dj-static==0.0.6
+influxdb==4.0.0
 static==0.4
 uwsgi
 MySQL-python==1.2.5

@@ -52,8 +52,6 @@ class DeploymentAnnotationForm(forms.ModelForm):
 
 
 class DeploymentUpdateForm(forms.ModelForm):
-    gas_pence_per_kwh = forms.Field(widget=NumberInput, label='Gas Cost (pence per KWh)')
-    elec_pence_per_kwh = forms.Field(widget=NumberInput, label='Electricity Cost (pence per KWh)')
     address_line_one = forms.CharField(label='First Line of Address')
 
     def __init__(self, *args, **kwargs):
@@ -66,24 +64,19 @@ class DeploymentUpdateForm(forms.ModelForm):
             'client_name',
             'address_line_one',
             'post_code',
-            'elec_pence_per_kwh',
-            'gas_pence_per_kwh',
             'notes',
             Submit(
-                'save', 'Save Deployment',
+                'save', 'Save Changes',
                 css_class='mdl-button mdl-js-button button_right mdl-button--raised mdl-button--colored')
         )
 
     class Meta:
         fields = [
-            'client_name', 'photo', 'address_line_one', 'post_code', 'elec_pence_per_kwh',
-            'gas_pence_per_kwh', 'notes']
+            'client_name', 'photo', 'address_line_one', 'post_code', 'notes']
         model = Deployment
 
 
 class DeploymentCreateForm(forms.ModelForm):
-    gas_pence_per_kwh = forms.Field(widget=NumberInput, label='Gas Cost (pence per KWh)')
-    elec_pence_per_kwh = forms.Field(widget=NumberInput, label='Electricity Cost (pence per KWh)')
     address_line_one = forms.CharField(label='First Line of Address')
     hub = forms.ModelChoiceField(queryset=Hub.objects.filter(deployment__isnull=True), empty_label=None)
 
@@ -98,8 +91,7 @@ class DeploymentCreateForm(forms.ModelForm):
             'hub',
             'address_line_one',
             'post_code',
-            'elec_pence_per_kwh',
-            'gas_pence_per_kwh',
+            # TODO Add cost fields?: forms.Field(widget=NumberInput, label='Gas Cost (pence per KWh)')
             'notes',
             Submit(
                 'save', 'Create Deployment',
@@ -123,8 +115,7 @@ class DeploymentCreateForm(forms.ModelForm):
 
     class Meta:
         fields = [
-            'client_name', 'photo', 'hub', 'address_line_one', 'post_code', 'elec_pence_per_kwh',
-            'gas_pence_per_kwh', 'notes']
+            'client_name', 'photo', 'hub', 'address_line_one', 'post_code', 'notes']
         model = Deployment
 
 
@@ -152,9 +143,11 @@ class DeploymentUpdatePhotoForm(forms.ModelForm):
         model = Deployment
 
 
-class DeploymentSensorLocationUpdateForm(forms.ModelForm):
+class DeploymentSensorUpdateForm(forms.ModelForm):
+    location = forms.CharField()
+    cost = forms.FloatField(required=False)
+
     class Meta:
-        fields = ['location']
         model = DeploymentSensor
 
 

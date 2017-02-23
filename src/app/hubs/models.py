@@ -10,20 +10,16 @@ from django.utils.translation import ugettext_lazy as _
 
 
 class Hub(TimeStampedModel):
-    """
-    A virtual version on the Raspberry Pi and what sensors are attached to it.
-    """
+    id = models.CharField(_('MAC Address'), primary_key=True, max_length=255)
     name = models.CharField(_('Name'), max_length=255)
-    mac_address = models.CharField(_('MAC Address'), max_length=255)
-    external_network_address = models.GenericIPAddressField(
-        blank=True, null=True)
+    external_network_address = models.GenericIPAddressField(blank=True, null=True)
     network_address = models.GenericIPAddressField(blank=True, null=True)
     online_since = models.DateTimeField(blank=True, null=True)
     last_ping = models.DateTimeField(blank=True, null=True)
 
     def __unicode__(self):
         return '{name} with MAC address {mac_address}'.format(
-            name=self.name, mac_address=self.mac_address
+            name=self.name, mac_address=self.id
         )
 
     @property
@@ -63,7 +59,7 @@ class Hub(TimeStampedModel):
 
     @property
     def mac_address_encoded(self):
-        return binascii.hexlify(self.mac_address.upper())
+        return binascii.hexlify(self.id.upper())
 
     def ping(self):
         now = timezone.now()
@@ -82,7 +78,7 @@ class Hub(TimeStampedModel):
         self.save()
 
     def save(self, *args, **kwargs):
-        self.mac_address = self.mac_address.lower()
+        self.id = self.id.lower()
 
         hub = super(Hub, self).save(*args, **kwargs)
 

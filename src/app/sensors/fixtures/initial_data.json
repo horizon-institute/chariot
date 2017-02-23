@@ -1,168 +1,159 @@
 [
-	{
-		"pk": 1,
-		"model": "sensors.channel",
-		"fields": {
-			"name": "TEMP",
-			"friendly_name": "Temperature",
-			"units": "°C"
-		}
-	},
-	{
-		"pk": 2,
-		"model": "sensors.channel",
-		"fields": {
-			"name": "HUMI",
-			"friendly_name": "Humidity",
-			"units": "%"
-		}
-	},
-	{
-		"pk": 3,
-		"model": "sensors.channel",
-		"fields": {
-			"name": "ELEC",
-			"friendly_name": "Electricity",
-			"units": "kWh"
-		}
-	},
-	{
-		"pk": 4,
-		"model": "sensors.channel",
-		"fields": {
-			"name": "BATT",
-			"hidden": true,
-			"friendly_name": "Battery",
-			"units": "%"
-		}
-	},
-	{
-		"pk": 5,
-		"model": "sensors.channel",
-		"fields": {
-			"name": "RSSI",
-			"hidden": true,
-			"friendly_name": "Signal Strength",
-			"units": "%"
-		}
-	},
-	{
-		"pk": 1,
-		"model": "sensors.sensor",
-		"fields": {
-			"default": true,
-			"channels": [
-				3,
-				4
-			],
-			"sensor_type": "Open",
-			"identifier": "7",
-			"name": "Electricity 1"
-		}
-	},
-	{
-		"pk": 2,
-		"model": "sensors.sensor",
-		"fields": {
-			"default": true,
-			"channels": [
-				3,
-				4
-			],
-			"sensor_type": "Open",
-			"identifier": "8",
-			"name": "Electricity 2"
-		}
-	},
-	{
-		"pk": 3,
-		"model": "sensors.sensor",
-		"fields": {
-			"default": true,
-			"channels": [
-				3,
-				4
-			],
-			"sensor_type": "Open",
-			"identifier": "9",
-			"name": "Electricity 3"
-		}
-	},
-	{
-		"pk": 4,
-		"model": "sensors.sensor",
-		"fields": {
-			"default": true,
-			"channels": [
-				3,
-				4
-			],
-			"sensor_type": "Open",
-			"identifier": "10",
-			"name": "Electricity 4"
-		}
-	},
-	{
-		"pk": 5,
-		"model": "sensors.sensor",
-		"fields": {
-			"default": true,
-			"channels": [
-				1,
-				4,
-				5
-			],
-			"sensor_type": "Open",
-			"identifier": "23",
-			"name": "External"
-		}
-	},
-	{
-		"pk": 6,
-		"model": "sensors.sensor",
-		"fields": {
-			"default": true,
-			"channels": [
-				1,
-				2,
-				4,
-				5
-			],
-			"sensor_type": "Open",
-			"identifier": "24",
-			"name": "Internal 1"
-		}
-	},
-	{
-		"pk": 7,
-		"model": "sensors.sensor",
-		"fields": {
-			"default": true,
-			"channels": [
-				1,
-				2,
-				4,
-				5
-			],
-			"sensor_type": "Open",
-			"identifier": "25",
-			"name": "Internal 2"
-		}
-	},
-	{
-		"pk": 8,
-		"model": "sensors.sensor",
-		"fields": {
-			"default": true,
-			"channels": [
-				1,
-				2,
-				4,
-				5
-			],
-			"sensor_type": "Open",
-			"identifier": "26",
-			"name": "Internal 3"
-		}
-	}
+  {
+    "pk": "TEMP",
+    "model": "sensors.channel",
+    "fields": {
+      "name": "Temperature",
+      "units": "°C"
+    }
+  },
+  {
+    "pk": "HUMI",
+    "model": "sensors.channel",
+    "fields": {
+      "name": "Humidity",
+      "units": "%"
+    }
+  },
+  {
+    "pk": "ELEC",
+    "model": "sensors.channel",
+    "fields": {
+      "name": "Electricity",
+      "units": "kWh"
+    }
+  },
+  {
+    "pk": "BATT",
+    "model": "sensors.channel",
+    "fields": {
+      "hidden": true,
+      "name": "Battery",
+      "units": "%"
+    }
+  },
+  {
+    "pk": "RSSI",
+    "model": "sensors.channel",
+    "fields": {
+      "hidden": true,
+      "name": "Signal Strength",
+      "units": "%"
+    }
+  },
+  {
+    "pk": "7",
+    "model": "sensors.sensor",
+    "fields": {
+      "default": true,
+      "cost_channel": "ELEC",
+      "channels": [
+        "ELEC",
+        "BATT"
+      ],
+      "sensor_type": "Open",
+      "name": "Electricity 1"
+    }
+  },
+  {
+    "pk": "8",
+    "model": "sensors.sensor",
+    "fields": {
+      "default": true,
+      "cost_channel": "ELEC",
+      "channels": [
+        "ELEC",
+        "BATT"
+      ],
+      "sensor_type": "Open",
+      "name": "Electricity 2"
+    }
+  },
+  {
+    "pk": "9",
+    "model": "sensors.sensor",
+    "fields": {
+      "default": true,
+      "cost_channel": "ELEC",
+      "channels": [
+        "ELEC",
+        "BATT"
+      ],
+      "sensor_type": "Open",
+      "name": "Electricity 3"
+    }
+  },
+  {
+    "pk": "10",
+    "model": "sensors.sensor",
+    "fields": {
+      "default": true,
+      "cost_channel": "ELEC",
+      "channels": [
+        "ELEC",
+        "BATT"
+      ],
+      "sensor_type": "Open",
+      "name": "Electricity 4"
+    }
+  },
+  {
+    "pk": "23",
+    "model": "sensors.sensor",
+    "fields": {
+      "default": true,
+      "channels": [
+        "TEMP",
+        "BATT",
+        "RSSI"
+      ],
+      "sensor_type": "Open",
+      "name": "External"
+    }
+  },
+  {
+    "pk": "24",
+    "model": "sensors.sensor",
+    "fields": {
+      "default": true,
+      "channels": [
+        "TEMP",
+        "HUMI",
+        "BATT",
+        "RSSI"
+      ],
+      "sensor_type": "Open",
+      "name": "Internal 1"
+    }
+  },
+  {
+    "pk": "25",
+    "model": "sensors.sensor",
+    "fields": {
+      "default": true,
+      "channels": [
+        "TEMP",
+        "HUMI",
+        "BATT",
+        "RSSI"
+      ],
+      "sensor_type": "Open",
+      "name": "Internal 2"
+    }
+  },
+  {
+    "pk": "26",
+    "model": "sensors.sensor",
+    "fields": {
+      "default": true,
+      "channels": [
+        "TEMP",
+        "HUMI",
+        "BATT",
+        "RSSI"
+      ],
+      "sensor_type": "Open",
+      "name": "Internal 3"
+    }
+  }
 ]

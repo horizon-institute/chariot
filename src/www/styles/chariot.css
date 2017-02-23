@@ -19,12 +19,26 @@ html, body {
 	align-self: flex-end;
 }
 
+a.device-item {
+    text-decoration: none;
+    color: #222;
+}
+
+a.device-item:hover {
+    background: #EEE;
+}
+
 .device-item {
     display: flex;
     align-items: center;
 	font-size:16px;
 	font-weight:400;
 	line-height:1;
+}
+
+.device-label {
+    color: rgb(33,150,243);
+    font-size: 12px;
 }
 
 .device-item input {

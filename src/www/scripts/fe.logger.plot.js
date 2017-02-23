@@ -14,7 +14,6 @@ $(function () {
 	fe.logger.plot = (function () {
 		var chart;
 
-		var raw_data = null;
 		var w, h;
 		var xSc;
 		var axis_channel_l;
@@ -35,11 +34,6 @@ $(function () {
 
 			axis_channel_l = settings.axis_channel;
 			axis_channel_r = settings.axis_channel;
-		}
-
-		function draw(data) {
-			fe.datastore.load(data, settings);
-			redraw();
 		}
 
 		var get_height = function () {
@@ -339,7 +333,7 @@ $(function () {
 				var ySc = d3.scale.linear().domain([y_range[0], y_range[1]]).range([0, h]);
 				var d3line = d3.svg.line()
 					.x(function (d) {
-						return xSc(d.t);
+						return xSc(d.time);
 					})
 					.y(function (d) {
 						return h - ySc(d.value);
@@ -357,40 +351,10 @@ $(function () {
 		};
 
 		var draw_antievents = function () {
-
-			var flat_annotations = get_flat_annotations();
-			// antiEvents are the segments outside events in the 
-			// current view
-			var antiEvents = [];
-			antiEvents.push({
-				start: get_x_min()
-			});
-			var i = 0;
-			// calculate the extend of each event on the plot
-			// map is used to avoid creating functions in a loop
-			if (settings.antievents) {
-				var selected_layer = fe.logger.annotation.get_selected_layer();
-				// TODO: Maybe add an 'init' to carpet.
-				if (selected_layer == null) {
-					selected_layer = {'ref': 1};
-				}
-
-				flat_annotations.map(function () {
-					flat_annotations[i].proxy = null;
-					flat_annotations[i].compr = [];
-					flat_annotations[i].duration = (flat_annotations[i].end - flat_annotations[i].start) / 60 / 1000;
-					if (selected_layer.ref == flat_annotations[i].layer) {
-						antiEvents[antiEvents.length - 1].end = flat_annotations[i].start;
-						antiEvents.push({
-							start: new Date(flat_annotations[i].start +
-								(flat_annotations[i].duration + 2) * 60 * 1000)
-						});
-					}
-					i += 1;
-				});
-			}
-
-			antiEvents[antiEvents.length - 1].end = get_x_max();
+			var antiEvents = [{
+				start: get_x_min(),
+				end: get_x_max()
+			}];
 			// the .bgs are used for listening to drag events
 			// they are the segments of the graph between events
 			chart.selectAll('.graph-bg').remove();
@@ -431,7 +395,7 @@ $(function () {
 
 		var draw_events = function () {
 			var flat_annotations = get_flat_annotations();
-			settings.annotation.draw_events(flat_annotations);
+			fe.logger.annotation.draw_events(flat_annotations);
 
 			draw_antievents();
 		};
@@ -658,7 +622,7 @@ $(function () {
 				if (handle_x === d3.max(handles_coords)) {
 					// right (end) handle
 					x0 = newX;
-					x1 = settings.selection.mouse_x(this);
+					x1 = fe.logger.selection.mouse_x(this);
 					// constrain x1 to the container (x0 is bound to be inside,
 					// because that's a click event)
 					x1 = Math.max(cntX, Math.min(cntW + cntX, x1));
@@ -666,7 +630,7 @@ $(function () {
 					// left (start) handle
 					w = parseFloat(chart.select('.selection').attr('width'));
 
-					x0 = settings.selection.mouse_x(this);
+					x0 = fe.logger.selection.mouse_x(this);
 					x1 = newX + w;
 
 					x0 = Math.max(cntX, Math.min(cntW + cntX, x0));
@@ -685,13 +649,13 @@ $(function () {
 			if (settings.enable_selection) {
 				var drag_behaviour = d3.behavior.drag()
 					.on("dragstart", function () {
-						settings.selection.drag_start(this);
+						fe.logger.selection.drag_start(this);
 					})
 					.on("drag", function () {
-						settings.selection.drag_move(this);
+						fe.logger.selection.drag_move(this);
 					})
 					.on("dragend", function () {
-						settings.selection.drag_end(this);
+						fe.logger.selection.drag_end(this);
 					});
 
 				d3.selectAll('.graph-bg').call(drag_behaviour);
@@ -705,7 +669,7 @@ $(function () {
 					// find the bg container we are in
 					d3.selectAll('.graph-bg').each(function () {
 						var cx, bg_x, bg_w, bg_rhs, curr = d3.select(this);
-						cx = settings.selection.mouse_x(this);
+						cx = fe.logger.selection.mouse_x(this);
 						bg_x = parseInt(curr.attr('x'), 10);
 						bg_w = parseInt(curr.attr('width'), 10);
 						bg_rhs = bg_x + bg_w;
@@ -736,66 +700,13 @@ $(function () {
 		var get_time_for_x = function (x) {
 			var t = xSc.invert(x);
 			t.setMilliseconds(0);
-
-			// round t to the closest sample (2 minutes)
-			// TODO: make this flexible (not 2 minutes..)
-			t.setMinutes(2 * ((t.getMinutes() + t.getSeconds() / 60) / 2).toFixed(0));
+			t.setMinutes((t.getMinutes() + t.getSeconds() / 60).toFixed(0));
 			return t;
-		};
-
-		var filter_data = function(start, end) {
-			// Clone
-			var filteredData = jQuery.extend(true, {}, raw_data);
-			$.each(filteredData.sensors, function (index, sensor) {
-				$.each(sensor.channels, function (index, channel) {
-					channel.data = channel.data.filter(function (value) {
-						return value.t.isBetween(start, end);
-					});
-				});
-			});
-			filteredData.annotations = filteredData.annotations.filter(function (value) {
-				return value.start.isBetween(start, end) || value.end.isBetween(start, end);
-			});
-
-			return filteredData;
-		};
-
-		var load_data = function (start, end, callback) {
-			if(raw_data == null) {
-				$.getJSON(DATA_URL, function (data) {
-					$.each(data.sensors, function (index, sensor) {
-						$.each(sensor.channels, function (index, channel) {
-							$.each(channel.data, function (index, dataItem) {
-								dataItem.t = moment(dataItem.t);
-							});
-						});
-					});
-					$.each(data.annotations, function (index, annotation) {
-						annotation.start = moment(annotation.start);
-						annotation.end = moment(annotation.end);
-					});
-
-					raw_data = data;
-					var filteredData = filter_data(start, end);
-					fe.logger.plot.draw(filteredData);
-					if (callback) {
-						callback(filteredData);
-					}
-				});
-			}
-			else {
-				var filteredData = filter_data(start, end);
-				fe.logger.plot.draw(filteredData);
-				if (callback) {
-					callback(filteredData);
-				}
-			}
 		};
 
 		// export the API
 		return {
 			init: init,
-			draw: draw,
 			redraw: redraw,
 			clear_selection: function (trigger_events) {
 				clear_selection(trigger_events);
@@ -835,9 +746,6 @@ $(function () {
 			},
 			set_axis_channel: function (channel, left) {
 				return set_axis_channel(channel, left);
-			},
-			load_data: function (start, end, callback) {
-				return load_data(start, end, callback);
 			},
 			draw_events: function (suggestions) {
 				return draw_events(suggestions);

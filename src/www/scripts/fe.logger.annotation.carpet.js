@@ -39,7 +39,7 @@ $(function () {
 				var layers = [
 					{
 						"ref": 1,
-						"colour": "#c62828"
+						"colour": "#C62828"
 					},
 					{
 						"ref": 2,
@@ -70,10 +70,10 @@ $(function () {
 					.attr("fill", function (layers) {
 						return layers.colour;
 					})
-					.style("opacity", 0.3)
+					.style("opacity", 0.4)
 					.on('click', function (layer) {
 						selected_layer = layer;
-						d3.selectAll('.carpet-row').style("opacity", 0.3);
+						d3.selectAll('.carpet-row').style("opacity", 0.4);
 						d3.select(this).style("opacity", 1);
 						fe.logger.plot.draw_antievents();
 					});
@@ -85,7 +85,7 @@ $(function () {
 
 				var selected_row = $(".carpet-row")[selected_layer.ref - 1];
 				// TODO: Put this into a separate function
-				d3.selectAll('.carpet-row').style("opacity", 0.3);
+				d3.selectAll('.carpet-row').style("opacity", 0.4);
 				d3.select(selected_row).style("opacity", 1);
 
 				// Add annotations
@@ -141,10 +141,10 @@ $(function () {
 						var x1 = fe.logger.plot.get_x_for_time(moment(d.end));
 						return x1 - x0;
 					}).on('click', function (e) {
-						show_annotation_editor(e);
-						d3.event.preventDefault();
-						d3.event.stopPropagation();
-					});
+					show_annotation_editor(e);
+					d3.event.preventDefault();
+					d3.event.stopPropagation();
+				});
 			}
 		};
 	}());

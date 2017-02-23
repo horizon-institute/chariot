@@ -45,6 +45,9 @@
 
 			<div class="mdl-menu mdl-menu--bottom-right mdl-js-menu mdl-js-ripple-effect" for="account-menu">
 				<div disabled class="mdl-menu__item">{{user.first_name|default:"Anonymous User"}}</div>
+				{% if user.is_authenticated %}
+				<a href="{% url 'admin:index' %}" class="mdl-menu__item">Admin</a>
+				{% endif %}
 				<a href="{% url 'devices' %}" class="mdl-menu__item">Devices</a>
 				{% block menu %}
 				{% endblock %}

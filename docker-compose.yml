@@ -1,7 +1,12 @@
 version: '2'
 services:
+    influx:
+        image: influxdb
+        ports:
+            - "8086:8086"
+
     db:
-        image: mysql:5.5
+        image: mysql
         environment:
             MYSQL_ROOT_PASSWORD: chariot
             MYSQL_DATABASE: chariot
@@ -12,6 +17,7 @@ services:
         build: src/app
         links:
             - db
+            - influx
         volumes:
             - ./src/app:/app
             - /media
@@ -27,24 +33,22 @@ services:
             - app
         volumes:
             - ./src/conf/nginx${CONF_TAG}.conf:/etc/nginx/nginx.conf:ro
-            - ./cert/live/${DOMAINS}:/cert
+            - ./cert/certs:/cert
             - ./src/www:/www
         volumes_from:
             - app
-        environment:
-            - LE_RENEW_HOOK=docker kill -s HUP @CONTAINER_NAME@
 
     cert:
-        restart: ${CERT_RESTART}
-        image: kvaps/letsencrypt-webroot
-        volumes:
-            - ./cert:/etc/letsencrypt
-            - ./src/www:/www
+        image: gordonchan/auto-letsencrypt
         links:
             - web
+        volumes:
+            - ./cert/certs:/etc/nginx/certs
+            - ./cert:/etc/letsencrypt
+            - ./src/www:/var/www
         environment:
-            - DOMAINS
             - EMAIL
-            - WEBROOT_PATH=/www
-            - EXP_LIMIT=30
-            - CHECK_FREQ=30
+            - CERTS_PATH=/etc/nginx/certs
+            - DOMAINS
+            - CHECK_FREQ=3
+        restart: ${CERT_RESTART}

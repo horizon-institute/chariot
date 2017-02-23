@@ -1,0 +1,60 @@
+{% extends 'chariot/base.html' %}
+{% load url from future %}
+
+{% block title %}Edit Sensor{% endblock %}
+
+{% block content %}
+<div class="mdl-grid">
+    <div class="mdl-cell mdl-cell--6-col mdl-cell--3-offset-desktop mdl-cell--1-offset-tablet">
+        <form class="uniForm" method="post">
+            {% csrf_token %}
+            <input name="deployment" value="{{sensor.deployment.pk}}" type="hidden">
+            <input name="sensor" value="{{sensor.sensor.id}}" type="hidden">
+
+            {{ form.non_field_errors }}
+            <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+                <label for="id_location" class="mdl-textfield__label ">
+                    Location
+                </label>
+                <input name="location" value="{{sensor.location}}" class="mdl-textfield__input" maxlength="255" type="text" id="id_location">
+                <span class="mdl-textfield__error">{{ form.location.errors }}</span>
+            </div>
+
+            <div>
+                <label class="device-label">
+                    Sensor
+                </label>
+                <div>
+                    {{ sensor.sensor.name }}
+                </div>
+            </div>
+
+            {% for reading in sensor.latest_readings %}
+                <div>
+                    <label class="device-label">
+                        {{ reading.channel.name }}
+                    </label>
+                    <div>
+                    {% if 'value' in reading %}
+                        {{ reading.value|floatformat:2 }}{{ reading.channel.units }}
+                    {% else %}
+                        No data
+                    {% endif %}
+                    </div>
+                </div>
+                {% if reading.channel == sensor.sensor.cost_channel %}
+                    <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+                        <label for="id_location" class="mdl-textfield__label ">
+                            {{sensor.sensor.cost_channel.name}} Cost
+                        </label>
+                        <input name="cost" value="{{sensor.cost}}" class="mdl-textfield__input" type="number" step="any" id="id_cost">
+                        <span class="mdl-textfield__error">{{ form.cost.errors }}</span>
+                    </div>
+                {% endif %}
+            {% endfor %}
+
+            <input type="submit" name="add_hub" value="Update Sensor" class="submit submitButton mdl-button mdl-js-button button_right mdl-button--raised mdl-button--colored" id="submit-id-add_hub">
+        </form>
+    </div>
+</div>
+{% endblock content %}

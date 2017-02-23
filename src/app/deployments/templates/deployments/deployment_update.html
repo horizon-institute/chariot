@@ -47,7 +47,7 @@
 					{% else %}
 					<div>Hub {{ deployment.hub.name }}</div>
 					{% endif %}
-					<div class="mdl-card__subtitle-text">{{ deployment.hub.mac_address }}</div>
+					<div class="mdl-card__subtitle-text">{{ deployment.hub.id }}</div>
 				</div>
 				<div style="flex: 1"></div>
 				<div class="mdl-typography--caption-force-preferred-font-color-contrast">
@@ -59,45 +59,35 @@
 			</div>
 		{% endif %}
 
-		{% for deployment_sensor in deployment.sensor_details.all %}
+		{% for deployment_sensor in deployment.sensors.all %}
 		{% with deployment_sensor.sensor as sensor %}
-			<div class="device-item">
+			<a class="device-item" href="{% url 'deployments:sensor' deployment.id sensor.id %}">
 				<i class="material-icons">router</i>
-                <form action="javascript:void(0);" id="form_{{ deployment_sensor.sensor.id }}">
-                    {% csrf_token %}
-                    <input name="deployment" type="hidden" value="{{ deployment.id }}">
-                    <input name="sensor" type="hidden" value="{{ sensor.id }}">
-					<input id="sensor_{{ deployment_sensor.sensor.id }}" name="location" type="text" value="{{ deployment_sensor.location|default:deployment_sensor.sensor.name }}">
-					<script>
-						$('#sensor_{{ deployment_sensor.sensor.id }}')
-                            .change(function(e) {
-								$.post('{% url 'deployments:update-location' %}', $("#form_{{ deployment_sensor.sensor.id }}").serialize());
-								e.preventDefault();
-                            });
-					</script>
+				<div>{{ deployment_sensor.location|default:deployment_sensor.sensor.name }}
 					{% for reading in deployment_sensor.latest_readings %}
 						{% if not reading.channel.hidden %}
 							<div class="mdl-typography--caption-force-preferred-font-color-contrast">
 								{% if 'value' in reading %}
-									{{ reading.channel.friendly_name }}: {{ reading.value|floatformat:2 }}{{ reading.channel.units }}
+									{{ reading.channel.name }}: {{ reading.value|floatformat:2 }}{{ reading.channel.units }}
 								{% else %}
-									{{ reading.channel.friendly_name }}: No data
+									{{ reading.channel.name }}: No data
 								{% endif %}
 							</div>
 						{% endif %}
 					{% endfor %}
-				</form>
+				</div>
 				<div style="flex: 1"></div>
 				<div class="mdl-typography--caption-force-preferred-font-color-contrast">
 					<span>
-		                {% if deployment_sensor.latest_reading_date %}
-		                {{ deployment_sensor.latest_reading_date|naturaltime }}
-		                {% else %}
-		                No data
-		                {% endif %}
-			        </span>
+						{% if deployment_sensor.latest_reading %}
+							{{ deployment_sensor.latest_reading.time|naturaltime }}
+						{% else %}
+							No data
+						{% endif %}
+
+					</span>
 				</div>
-			</div>
+			</a>
 		{% endwith %}
 		{% endfor %}
 	</div>

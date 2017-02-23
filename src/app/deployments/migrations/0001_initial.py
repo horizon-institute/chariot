@@ -18,27 +18,11 @@ class Migration(SchemaMigration):
             ('post_code', self.gf('django.db.models.fields.CharField')(max_length=255)),
             ('notes', self.gf('django.db.models.fields.TextField')(null=True, blank=True)),
             ('photo', self.gf('django.db.models.fields.files.ImageField')(max_length=100, null=True, blank=True)),
-            ('gas_pence_per_kwh', self.gf('django.db.models.fields.FloatField')(default=0)),
-            ('elec_pence_per_kwh', self.gf('django.db.models.fields.FloatField')(default=0)),
             ('start_date', self.gf('django.db.models.fields.DateTimeField')(null=True)),
             ('end_date', self.gf('django.db.models.fields.DateTimeField')(null=True)),
             ('hub', self.gf('django.db.models.fields.related.OneToOneField')(to=orm['hubs.Hub'], unique=True, null=True, blank=True)),
         ))
         db.send_create_signal('deployments', ['Deployment'])
-
-        # Adding model 'DeploymentChannelCost'
-        db.create_table('deployments_deploymentchannelcost', (
-            ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('created', self.gf('django.db.models.fields.DateTimeField')(default=datetime.datetime.now, blank=True)),
-            ('modified', self.gf('django.db.models.fields.DateTimeField')(default=datetime.datetime.now, blank=True)),
-            ('deployment', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['deployments.Deployment'])),
-            ('channel', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['sensors.Channel'])),
-            ('cost', self.gf('django.db.models.fields.FloatField')()),
-        ))
-        db.send_create_signal('deployments', ['DeploymentChannelCost'])
-
-        # Adding unique constraint on 'DeploymentChannelCost', fields ['deployment', 'channel']
-        db.create_unique('deployments_deploymentchannelcost', ['deployment_id', 'channel_id'])
 
         # Adding model 'DeploymentDataCache'
         db.create_table('deployments_deploymentdatacache', (
@@ -68,8 +52,9 @@ class Migration(SchemaMigration):
             ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
             ('created', self.gf('django.db.models.fields.DateTimeField')(default=datetime.datetime.now, blank=True)),
             ('modified', self.gf('django.db.models.fields.DateTimeField')(default=datetime.datetime.now, blank=True)),
-            ('deployment', self.gf('django.db.models.fields.related.ForeignKey')(related_name='sensor_details', to=orm['deployments.Deployment'])),
-            ('sensor', self.gf('django.db.models.fields.related.ForeignKey')(related_name='deployment_details', to=orm['sensors.Sensor'])),
+            ('deployment', self.gf('django.db.models.fields.related.ForeignKey')(related_name='sensors', to=orm['deployments.Deployment'])),
+            ('sensor', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['sensors.Sensor'])),
+            ('cost', self.gf('django.db.models.fields.FloatField')(null=True)),
             ('location', self.gf('django.db.models.fields.CharField')(max_length=255, null=True, blank=True)),
         ))
         db.send_create_signal('deployments', ['DeploymentSensor'])
@@ -77,40 +62,13 @@ class Migration(SchemaMigration):
         # Adding unique constraint on 'DeploymentSensor', fields ['deployment', 'sensor']
         db.create_unique('deployments_deploymentsensor', ['deployment_id', 'sensor_id'])
 
-        # Adding M2M table for field sensor_readings on 'DeploymentSensor'
-        m2m_table_name = db.shorten_name('deployments_deploymentsensor_sensor_readings')
-        db.create_table(m2m_table_name, (
-            ('id', models.AutoField(verbose_name='ID', primary_key=True, auto_created=True)),
-            ('deploymentsensor', models.ForeignKey(orm['deployments.deploymentsensor'], null=False)),
-            ('sensorreading', models.ForeignKey(orm['sensors.sensorreading'], null=False))
-        ))
-        db.create_unique(m2m_table_name, ['deploymentsensor_id', 'sensorreading_id'])
-
-        # Adding model 'DeploymentSensorReading'
-        db.create_table('deployments_deploymentsensorreading', (
-            ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('deployment', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['deployments.Deployment'])),
-            ('sensor', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['sensors.Sensor'])),
-            ('channel', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['sensors.Channel'])),
-            ('timestamp', self.gf('django.db.models.fields.FloatField')(db_index=True)),
-            ('value', self.gf('django.db.models.fields.FloatField')(default=0)),
-            ('important', self.gf('django.db.models.fields.BooleanField')(default=True, db_index=True)),
-        ))
-        db.send_create_signal('deployments', ['DeploymentSensorReading'])
-
 
     def backwards(self, orm):
         # Removing unique constraint on 'DeploymentSensor', fields ['deployment', 'sensor']
         db.delete_unique('deployments_deploymentsensor', ['deployment_id', 'sensor_id'])
 
-        # Removing unique constraint on 'DeploymentChannelCost', fields ['deployment', 'channel']
-        db.delete_unique('deployments_deploymentchannelcost', ['deployment_id', 'channel_id'])
-
         # Deleting model 'Deployment'
         db.delete_table('deployments_deployment')
-
-        # Deleting model 'DeploymentChannelCost'
-        db.delete_table('deployments_deploymentchannelcost')
 
         # Deleting model 'DeploymentDataCache'
         db.delete_table('deployments_deploymentdatacache')
@@ -120,12 +78,6 @@ class Migration(SchemaMigration):
 
         # Deleting model 'DeploymentSensor'
         db.delete_table('deployments_deploymentsensor')
-
-        # Removing M2M table for field sensor_readings on 'DeploymentSensor'
-        db.delete_table(db.shorten_name('deployments_deploymentsensor_sensor_readings'))
-
-        # Deleting model 'DeploymentSensorReading'
-        db.delete_table('deployments_deploymentsensorreading')
 
 
     models = {
@@ -170,16 +122,13 @@ class Migration(SchemaMigration):
             'address_line_one': ('django.db.models.fields.CharField', [], {'max_length': '255'}),
             'client_name': ('django.db.models.fields.CharField', [], {'max_length': '255'}),
             'created': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now', 'blank': 'True'}),
-            'elec_pence_per_kwh': ('django.db.models.fields.FloatField', [], {'default': '0'}),
             'end_date': ('django.db.models.fields.DateTimeField', [], {'null': 'True'}),
-            'gas_pence_per_kwh': ('django.db.models.fields.FloatField', [], {'default': '0'}),
             'hub': ('django.db.models.fields.related.OneToOneField', [], {'to': "orm['hubs.Hub']", 'unique': 'True', 'null': 'True', 'blank': 'True'}),
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'modified': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now', 'blank': 'True'}),
             'notes': ('django.db.models.fields.TextField', [], {'null': 'True', 'blank': 'True'}),
             'photo': ('django.db.models.fields.files.ImageField', [], {'max_length': '100', 'null': 'True', 'blank': 'True'}),
             'post_code': ('django.db.models.fields.CharField', [], {'max_length': '255'}),
-            'sensors': ('django.db.models.fields.related.ManyToManyField', [], {'to': "orm['sensors.Sensor']", 'through': "orm['deployments.DeploymentSensor']", 'symmetrical': 'False'}),
             'start_date': ('django.db.models.fields.DateTimeField', [], {'null': 'True'})
         },
         'deployments.deploymentannotation': {
@@ -194,15 +143,6 @@ class Migration(SchemaMigration):
             'start': ('django.db.models.fields.DateTimeField', [], {}),
             'text': ('django.db.models.fields.TextField', [], {})
         },
-        'deployments.deploymentchannelcost': {
-            'Meta': {'unique_together': "(('deployment', 'channel'),)", 'object_name': 'DeploymentChannelCost'},
-            'channel': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['sensors.Channel']"}),
-            'cost': ('django.db.models.fields.FloatField', [], {}),
-            'created': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now', 'blank': 'True'}),
-            'deployment': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['deployments.Deployment']"}),
-            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'modified': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now', 'blank': 'True'})
-        },
         'deployments.deploymentdatacache': {
             'Meta': {'ordering': "('-modified', '-created')", 'object_name': 'DeploymentDataCache'},
             'created': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now', 'blank': 'True'}),
@@ -211,32 +151,21 @@ class Migration(SchemaMigration):
             'modified': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now', 'blank': 'True'})
         },
         'deployments.deploymentsensor': {
-            'Meta': {'unique_together': "(('deployment', 'sensor'),)", 'object_name': 'DeploymentSensor'},
+            'Meta': {'ordering': "['sensor']", 'unique_together': "(('deployment', 'sensor'),)", 'object_name': 'DeploymentSensor'},
+            'cost': ('django.db.models.fields.FloatField', [], {'null': 'True'}),
             'created': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now', 'blank': 'True'}),
-            'deployment': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'sensor_details'", 'to': "orm['deployments.Deployment']"}),
+            'deployment': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'sensors'", 'to': "orm['deployments.Deployment']"}),
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'location': ('django.db.models.fields.CharField', [], {'max_length': '255', 'null': 'True', 'blank': 'True'}),
             'modified': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now', 'blank': 'True'}),
-            'sensor': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'deployment_details'", 'to': "orm['sensors.Sensor']"}),
-            'sensor_readings': ('django.db.models.fields.related.ManyToManyField', [], {'symmetrical': 'False', 'related_name': "'deployments'", 'blank': 'True', 'to': "orm['sensors.SensorReading']"})
-        },
-        'deployments.deploymentsensorreading': {
-            'Meta': {'ordering': "['timestamp']", 'object_name': 'DeploymentSensorReading'},
-            'channel': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['sensors.Channel']"}),
-            'deployment': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['deployments.Deployment']"}),
-            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'important': ('django.db.models.fields.BooleanField', [], {'default': 'True', 'db_index': 'True'}),
-            'sensor': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['sensors.Sensor']"}),
-            'timestamp': ('django.db.models.fields.FloatField', [], {'db_index': 'True'}),
-            'value': ('django.db.models.fields.FloatField', [], {'default': '0'})
+            'sensor': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['sensors.Sensor']"})
         },
         'hubs.hub': {
             'Meta': {'ordering': "('-modified', '-created')", 'object_name': 'Hub'},
             'created': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now', 'blank': 'True'}),
             'external_network_address': ('django.db.models.fields.GenericIPAddressField', [], {'max_length': '39', 'null': 'True', 'blank': 'True'}),
-            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'id': ('django.db.models.fields.CharField', [], {'max_length': '255', 'primary_key': 'True'}),
             'last_ping': ('django.db.models.fields.DateTimeField', [], {'null': 'True', 'blank': 'True'}),
-            'mac_address': ('django.db.models.fields.CharField', [], {'max_length': '255'}),
             'modified': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now', 'blank': 'True'}),
             'name': ('django.db.models.fields.CharField', [], {'max_length': '255'}),
             'network_address': ('django.db.models.fields.GenericIPAddressField', [], {'max_length': '39', 'null': 'True', 'blank': 'True'}),
@@ -244,28 +173,19 @@ class Migration(SchemaMigration):
         },
         'sensors.channel': {
             'Meta': {'object_name': 'Channel'},
-            'friendly_name': ('django.db.models.fields.CharField', [], {'max_length': '256'}),
             'hidden': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
-            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'name': ('django.db.models.fields.CharField', [], {'max_length': '32'}),
+            'id': ('django.db.models.fields.CharField', [], {'max_length': '32', 'primary_key': 'True'}),
+            'name': ('django.db.models.fields.CharField', [], {'max_length': '256'}),
             'units': ('django.db.models.fields.CharField', [], {'max_length': '10'})
         },
         'sensors.sensor': {
-            'Meta': {'object_name': 'Sensor'},
+            'Meta': {'ordering': "['name']", 'object_name': 'Sensor'},
             'channels': ('django.db.models.fields.related.ManyToManyField', [], {'to': "orm['sensors.Channel']", 'symmetrical': 'False'}),
+            'cost_channel': ('django.db.models.fields.related.ForeignKey', [], {'blank': 'True', 'related_name': "'+'", 'null': 'True', 'to': "orm['sensors.Channel']"}),
             'default': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
-            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'identifier': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '30', 'db_index': 'True'}),
+            'id': ('django.db.models.fields.CharField', [], {'max_length': '30', 'primary_key': 'True'}),
             'name': ('django.db.models.fields.CharField', [], {'max_length': '200'}),
             'sensor_type': ('django.db.models.fields.CharField', [], {'max_length': '30'})
-        },
-        'sensors.sensorreading': {
-            'Meta': {'ordering': "['timestamp']", 'object_name': 'SensorReading'},
-            'channel': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['sensors.Channel']"}),
-            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'sensor': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['sensors.Sensor']"}),
-            'timestamp': ('django.db.models.fields.DateTimeField', [], {'db_index': 'True'}),
-            'value': ('django.db.models.fields.FloatField', [], {'default': '0'})
         }
     }
 

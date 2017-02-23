@@ -18,7 +18,7 @@ Devices
 					{% else %}
 						<span>Hub {{ hub.name }}</span>
 					{% endif %}
-					<span class="mdl-list__item-sub-title">{{ hub.mac_address }}</span>
+					<span class="mdl-list__item-sub-title">{{ hub.id }}</span>
 				</div>
 				<div class="mdl-list__item-secondary-content">
 					<span class="mdl-list__item-secondary-info">
@@ -40,7 +40,7 @@ Devices
 		<li class="mdl-list__item mdl-list__item--two-line">
 			<div class="mdl-list__item-primary-content {% if not sensor_deployment_details.connection_status.0 %}panel-danger{% else %}panel-default{% endif %}">
 				<i class="material-icons mdl-list__item-icon">router</i>
-				<span>{{ sensor.name|default:"Sensor" }} <span style="color: #888;">({{ sensor.identifier }})</span></span>
+				<span>{{ sensor.name|default:"Sensor" }} <span style="color: #888;">({{ sensor.id }})</span></span>
 				<span class="mdl-list__item-sub-title">{{ sensor.channels.all|join:", " }}</span>
 			</div>
 		</li>

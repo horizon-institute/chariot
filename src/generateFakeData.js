@@ -3,11 +3,12 @@ const FormData = require('form-data');
 const fs = require('fs');
 const assert = require('assert');
 
-const requestPause = 1000;
+const requestPause = 100;
 
 const url = 'http://localhost';
-const mac_addresses = ['12:34:56:78:90:01', '12:34:56:78:90:02'];
-const channels = ['TEMP', 'ELEC']; // Empty for all channels
+const mac_addresses = ['12:34:56:78:90:01'];
+const sensors = ['7', '23','24','25'];
+const channels = []; // Empty for all channels
 var headers = {};
 
 fetch(url + '/api/hub/' + mac_addresses[0] + '/token')
@@ -26,13 +27,14 @@ fetch(url + '/api/hub/' + mac_addresses[0] + '/token')
 		return response.json();
 	})
 	.then(function (deploymentList) {
+	    console.log(JSON.stringify(deploymentList));
 		var deploymentIndex = 0;
 		var sensorIndex = 0;
 		var channelIndex = 0;
 
 		const deployments = [];
 		for (const deployment of deploymentList) {
-			const index = mac_addresses.indexOf(deployment.hub.mac_address);
+			const index = mac_addresses.indexOf(deployment.hub);
 			if (index != -1) {
 				deployments.push(deployment);
 			}
@@ -43,18 +45,18 @@ fetch(url + '/api/hub/' + mac_addresses[0] + '/token')
 		const interval = setInterval(function () {
 			while (true) {
 				const deployment = deployments[deploymentIndex];
-				const sensor = deployment.sensors[sensorIndex];
+				const sensor = deployment.sensors[sensorIndex].sensor;
 				const channel = sensor.channels[channelIndex];
 				channelIndex += 1;
 				if (channelIndex >= sensor.channels.length) {
 					channelIndex = 0;
 					sensorIndex += 1;
 					if (sensorIndex >= deployment.sensors.length) {
-						fetch(url + '/api/hub/' + deployment.hub.mac_address + '/ping', {method: 'PUT', headers: headers})
+						fetch(url + '/api/hub/' + deployment.hub + '/ping', {method: 'PUT', headers: headers})
 							.then(function (response) {
 								assert(response.ok, response.status + ': ' + response.statusText + ' ' + response.url);
 								process.stdout.write("\n");
-								console.log(deployment.hub.mac_address);
+								console.log(deployment.hub);
 							});
 						sensorIndex = 0;
 						deploymentIndex += 1;
@@ -64,11 +66,16 @@ fetch(url + '/api/hub/' + mac_addresses[0] + '/token')
 					}
 				}
 
-				if (channels.length == 0 || channels.indexOf(channel.name) != -1) {
+				if ((sensors.length == 0 || sensors.indexOf(sensor.id) != -1)
+				 && (channels.length == 0 || channels.indexOf(channel.id) != -1)) {
 					sendData(deployment, sensor, channel, headers)
 						.then(function (response) {
 							assert(response.ok, response.status + ': ' + response.statusText + ' ' + response.url);
 							process.stdout.write(".");
+							return response.text()
+                        })
+                        .then(function (text) {
+                            //console.log(text);
                         })
 						.catch(function (err) {
 		                    console.log('Error ' + err.message);
@@ -85,15 +92,17 @@ fetch(url + '/api/hub/' + mac_addresses[0] + '/token')
 
 function sendData(deployment, sensor, channel) {
 	if (!channel.value) {
+		channel.trend = 0;
 		channel.value = 20;
 	}
 	else {
-		channel.value += Math.random() - Math.random() + Math.random() - Math.random();
+	    channel.trend += (Math.random() - Math.random()) / 100;
+		channel.value += channel.trend;
 	}
 	var data = new FormData();
-	data.append('hub', deployment.hub.mac_address);
-	data.append('sensor', sensor.identifier);
-	data.append('channel', channel.name);
+	data.append('deployment', deployment.id);
+	data.append('sensor', sensor.id);
+	data.append('channel', channel.id);
 	data.append('value', channel.value);
 	return fetch(url + '/api/reading', {
 		method: 'POST',

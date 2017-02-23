@@ -4,11 +4,13 @@ from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
+from chariot.influx import select
 
 from django_extensions.db.models import TimeStampedModel
 
 from hubs.models import Hub
-from sensors.models import Sensor, SensorReading, Channel
+from sensors.models import Sensor
+from chariot.influx import drop_from
 
 
 class Deployment(TimeStampedModel):
@@ -19,15 +21,10 @@ class Deployment(TimeStampedModel):
 
     photo = models.ImageField(_('Header Image'), upload_to='deployment_photos', null=True, blank=True)
 
-    gas_pence_per_kwh = models.FloatField(default=0)
-    elec_pence_per_kwh = models.FloatField(default=0)
-
     start_date = models.DateTimeField(null=True)
     end_date = models.DateTimeField(null=True)
 
     hub = models.OneToOneField(Hub, blank=True, null=True)
-
-    sensors = models.ManyToManyField(Sensor, through='DeploymentSensor')
 
     def __unicode__(self):
         return self.client_name
@@ -48,8 +45,9 @@ class Deployment(TimeStampedModel):
         if self.running:
             raise ValueError('Deployment is already running')
 
-        for sensor in self.sensor_details.all():
-            sensor.sensor_readings.all().delete()
+        for sensor in self.sensors.all():
+            for channel in sensor.sensor.channels.all():
+                drop_from(channel.name).where('deployment').eq(self.pk)
 
         self.start_date = timezone.datetime.now()
         self.save()
@@ -67,15 +65,6 @@ class Deployment(TimeStampedModel):
         return 1, 'Details Incomplete'
 
 
-class DeploymentChannelCost(TimeStampedModel):
-    deployment = models.ForeignKey(Deployment)
-    channel = models.ForeignKey(Channel)
-    cost = models.FloatField()
-
-    class Meta:
-        unique_together = ("deployment", "channel")
-
-
 class DeploymentDataCache(TimeStampedModel):
     deployment = models.OneToOneField(Deployment, primary_key=True)
     data = models.TextField()
@@ -91,13 +80,13 @@ class DeploymentAnnotation(TimeStampedModel):
 
 
 class DeploymentSensor(TimeStampedModel):
-    deployment = models.ForeignKey(Deployment, related_name='sensor_details')
-    sensor = models.ForeignKey(Sensor, related_name='deployment_details')
-
+    deployment = models.ForeignKey(Deployment, related_name='sensors')
+    sensor = models.ForeignKey(Sensor)
+    cost = models.FloatField(default=0)
     location = models.CharField(max_length=255, blank=True, null=True)
-    sensor_readings = models.ManyToManyField(SensorReading, related_name='deployments', blank=True)
 
     class Meta:
+        ordering = ['sensor']
         verbose_name_plural = "Deployment Sensors"
         unique_together = ("deployment", "sensor")
 
@@ -107,25 +96,41 @@ class DeploymentSensor(TimeStampedModel):
         )
 
     @property
-    def battery_percentage(self):
-        try:
-            battery_reading = self.sensor_readings.filter(
-                channel__name='BATT').order_by('-timestamp')[0]
-            return battery_reading.value
-        # return round(battery_reading.value / float(3) * 100)
-        except IndexError:
-            return False
+    def has_data(self):
+        channels = []
+        for channel in self.sensor.channels.all():
+            try:
+                result = select('LAST').from_table(channel.id)\
+                    .where('deployment').eq(self.deployment.pk)\
+                    .where('sensor').eq(self.sensor.id).fetch_one()
+                if result:
+                    channels.append(channel)
+            except Exception as e:
+                pass
+
+        return len(channels) > 0
 
     @property
-    def earliest_reading_date(self):
-        return self.sensor_readings.order_by('timestamp')[0].timestamp
+    def latest_reading(self):
+        latest_reading = {}
 
-    @property
-    def latest_reading_date(self):
-        try:
-            return self.sensor_readings.order_by('-timestamp')[0].timestamp
-        except IndexError:
-            pass
+        for channel in self.sensor.channels.all():
+            try:
+                result = select('LAST').from_table(channel.id)\
+                    .where('deployment').eq(self.deployment.pk)\
+                    .where('sensor').eq(self.sensor.id).fetch_one()
+                if result:
+                    if result['time'] > latest_reading['time']:
+                        latest_reading = {
+                            'channel': channel,
+                            'result': result,
+                            'time': result['time'],
+                            'value': result['last']
+                        }
+            except Exception as e:
+                pass
+
+        return latest_reading
 
     @property
     def latest_readings(self):
@@ -133,14 +138,19 @@ class DeploymentSensor(TimeStampedModel):
 
         for channel in self.sensor.channels.all():
             try:
-                reading = self.sensor_readings.filter(channel=channel).order_by('-timestamp')[0]
+                result = select('LAST').from_table(channel.id)\
+                    .where('deployment').eq(self.deployment.pk)\
+                    .where('sensor').eq(self.sensor.id).fetch_one()
                 latest_readings.append({
                     'channel': channel,
-                    'value': reading.value
+                    'result': result,
+                    'time': result['time'],
+                    'value': result['last']
                 })
-            except:
+            except Exception as e:
                 latest_readings.append({
-                    'channel': channel
+                    'channel': channel,
+                    'e': repr(e)
                 })
 
         return latest_readings
@@ -157,15 +167,3 @@ class DeploymentSensor(TimeStampedModel):
                 pass
 
         super(DeploymentSensor, self).save(*args, **kwargs)
-
-
-class DeploymentSensorReading(models.Model):
-    deployment = models.ForeignKey(Deployment, db_index=True)
-    sensor = models.ForeignKey(Sensor, db_index=True)
-    channel = models.ForeignKey(Channel, db_index=True)
-    timestamp = models.FloatField(db_index=True)
-    value = models.FloatField(_('value'), default=0)
-    important = models.BooleanField(db_index=True, default=True)
-
-    class Meta:
-        ordering = ['timestamp']

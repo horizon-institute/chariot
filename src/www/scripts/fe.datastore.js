@@ -14,11 +14,32 @@ $(function () {
 	}
 
 	fe.datastore = (function () {
+		var raw_data = null;
 		var data_sets = [];
 		var annotations = {};
 
 		var x_min = -1;
 		var x_max = -1;
+		var colours = [
+			"#c76434",
+			"#6971d7",
+			"#acb839",
+			"#563889",
+			"#64c673",
+			"#923076",
+			"#83aa3e",
+			"#cc79cd",
+			"#5e8e3e",
+			"#d96699",
+			"#45c097",
+			"#da585c",
+			"#6d8dd7",
+			"#d1972c",
+			"#ae3d5d",
+			"#c3a64e",
+			"#9a3f2f",
+			"#9c7835"
+		];
 
 		var clear = function () {
 			data_sets = [];
@@ -26,17 +47,102 @@ $(function () {
 		};
 
 		var add_annotation = function (annotation) {
+			annotation.start = moment(annotation.start);
+			annotation.end = moment(annotation.end);
 			annotations[annotation.id] = annotation;
-			annotations[annotation.id].start = moment(annotation.start);
-			annotations[annotation.id].end = moment(annotation.end);
+			raw_data.annotations.push(annotation);
 		};
 
 		var remove_annotation = function (annotation) {
+			for(var index = 0; index < raw_data.annotations.length; index ++) {
+				if(raw_data.annotations[index].id == annotation.id) {
+					raw_data.annotations.splice(index, 1);
+					break;
+				}
+			}
 			delete annotations[annotation.id];
 		};
 
-		var add_dataset = function (dataset, colour) {
-			data_sets.push(build_dataset(dataset, colour));
+		var data_point = function(channel, time, value) {
+			if('y_max' in channel) {
+				channel.y_max = Math.max(channel.y_max, value);
+			} else {
+				channel.y_max = value;
+			}
+			if('y_min' in channel) {
+				channel.y_min = Math.min(channel.y_min, value);
+			} else {
+				channel.y_min = value;
+			}
+
+			return {
+				time: time,
+				value: value
+			}
+		};
+
+		var filter_data = function(start, end) {
+			clear();
+			var filteredData = jQuery.extend(true, {}, raw_data);
+			$.each(filteredData.sensors, function (index, sensor) {
+				$.each(sensor.channels, function (index, channel) {
+					var prev = null;
+					var filtered = [];
+					$.each(channel.data, function (index, dataItem) {
+						if(dataItem.time.isAfter(start)) {
+							if(dataItem.time.isBefore(end)) {
+								if(prev && prev.time.isBefore(start)) {
+									filtered.push(data_point(channel, start, ((start - prev.time) / (dataItem.time - prev.time)) * (dataItem.value - prev.value) + prev.value));
+								}
+								filtered.push(data_point(channel, dataItem.time, dataItem.value));
+							} else {
+								if(prev && prev.time.isBefore(end)) {
+									if(prev.time.isBefore(start)) {
+										filtered.push(data_point(channel, start, ((start - prev.time) / (dataItem.time - prev.time)) * (dataItem.value - prev.value) + prev.value));
+									}
+									filtered.push(data_point(channel, end, ((end - prev.time) / (dataItem.time - prev.time)) * (dataItem.value - prev.value) + prev.value));
+								} else {
+									return false;
+								}
+							}
+						}
+						prev = dataItem;
+
+					});
+
+					channel.data = filtered;
+					if(channel.data.length > 0) {
+						channel.x_max = channel.data[channel.data.length - 1].time;
+						channel.x_min = channel.data[0].time;
+						channel.channel = channel.id;
+						channel.sensor = sensor.id;
+
+						channel.colour = colours[data_sets.length];
+						channel.selected = false;
+						channel.visible = true;
+
+						var h = fe.logger.plot.get_height();
+						var w = fe.logger.plot.get_width();
+						channel.ySc = d3.scale.linear().domain([0, 1.1 * channel.y_max]).range([0, h]);
+						channel.xSc = d3.time.scale().domain([channel.x_min, channel.x_max]).range([0, w]);
+
+						add_dataset(channel);
+					}
+				});
+			});
+			filteredData.annotations = filteredData.annotations.filter(function (value) {
+				return value.start.isBetween(start, end) || value.end.isBetween(start, end);
+			});
+
+			$.each(filteredData.annotations, function (index, annotation) {
+				annotations[annotation.id] = annotation;
+			});
+
+			return filteredData;
+		};
+
+		var add_dataset = function (dataset) {
+			data_sets.push(dataset);
 
 			$.each(fe.datastore.get_datasets(), function (index, dataset) {
 				if (x_min == -1 || dataset.x_min < x_min) {
@@ -68,54 +174,36 @@ $(function () {
 			return found;
 		};
 
-		var build_dataset = function (data, colour) {
-			var dataset = {};
-			dataset.y_max = d3.max(data.data, function (d) {
-				return d.value;
-			});
-			dataset.y_min = d3.min(data.data, function (d) {
-				return d.value;
-			});
-			dataset.x_max = data.data[data.data.length - 1].t;
-			dataset.x_min = data.data[0].t;
-			dataset.data = data.data;
-			dataset.channel = data.id;
-			dataset.sensor = data.sensor_id;
-			dataset.units = data.units;
+		var load = function (start, end, callback) {
+			if(raw_data == null) {
+				$.getJSON(DATA_URL, function (data) {
+					$.each(data.sensors, function (index, sensor) {
+						$.each(sensor.channels, function (index, channel) {
+							$.each(channel.data, function (index, dataItem) {
+								dataItem.time = moment(dataItem.time);
+							});
+						});
+					});
+					$.each(data.annotations, function (index, annotation) {
+						annotation.start = moment(annotation.start);
+						annotation.end = moment(annotation.end);
+					});
 
-			// These properties are more for view purposes.
-			dataset.colour = colour;
-			dataset.name = data.name;
-			// Whether there's a selected portion.
-			dataset.selected = false;
-			// Whether the dataset is actually visible on the graph.
-			dataset.visible = true;
-
-
-			var h = fe.logger.plot.get_height();
-			var w = fe.logger.plot.get_width();
-			dataset.ySc = d3.scale.linear().domain([0, 1.1 * dataset.y_max]).range([0, h]);
-			dataset.xSc = d3.time.scale().domain([dataset.x_min, dataset.x_max]).range([0, w]);
-
-			return dataset;
-		};
-
-		var load = function (data, settings) {
-			clear();
-			$.each(data.annotations, function (index, annotation) {
-				fe.datastore.add_annotation(annotation);
-			});
-
-			var pos = 0;
-			$.each(data.sensors, function (index, sensor) {
-				$.each(sensor.channels, function(index, channel) {
-					if (channel.data.length > 0) {
-						channel.sensor_id = sensor.id;
-						fe.datastore.add_dataset(channel, settings.colours[pos % settings.colours.length]);
-						pos++;
+					raw_data = data;
+					var filteredData = filter_data(start, end);
+					fe.logger.plot.redraw();
+					if (callback) {
+						callback(filteredData);
 					}
 				});
-			});
+			}
+			else {
+				var filteredData = filter_data(start, end);
+				fe.logger.plot.redraw();
+				if (callback) {
+					callback(filteredData);
+				}
+			}
 		};
 
 		var get_datasets = function () {
@@ -131,9 +219,6 @@ $(function () {
 			add_annotation: function (annotation) {
 				add_annotation(annotation);
 			},
-			add_dataset: function (dataset, colour) {
-				add_dataset(dataset, colour);
-			},
 			get_datasets: function () {
 				return get_datasets();
 			},
@@ -143,8 +228,8 @@ $(function () {
 			clear: function () {
 				clear();
 			},
-			load: function (data, colours) {
-				load(data, colours);
+			load: function(start, end, callback) {
+				load(start, end, callback);
 			},
 			remove_annotation: function (annotation) {
 				return remove_annotation(annotation);

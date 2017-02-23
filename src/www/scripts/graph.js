@@ -16,8 +16,6 @@ function qs(key) {
 $(document).ready(function () {
 	var chartDiv = $('#chart');
 	chartDiv.logger({
-		'antievents': true,
-		'draw_controls': false,
 		'all_channels': qs('channels') == 'all'
 	});
 	chartDiv.bind("logger:click", function (event, params) {
@@ -170,7 +168,7 @@ var update_date_range = function (start, end) {
 	}
 
 	//$('#load-spinner').fadeIn();
-	fe.logger.plot.load_data(startDate, endDate, rebuild_view);
+	fe.datastore.load(startDate, endDate, rebuild_view);
 };
 
 var rebuild_view = function (data) {
@@ -211,7 +209,7 @@ function build_menu(sensors) {
 				.data('channel-id', channel.id);
 
 			elem.append('<input type="radio" name="axis-left" class="radio">');
-			elem.append('<span style="flex: 1">' + channel.friendly_name + '</span>');
+			elem.append('<span style="flex: 1">' + channel.name + '</span>');
 			elem.append('<input type="radio" name="axis-right" class="radio">');
 			axisMenu.append(elem);
 		}
@@ -224,7 +222,7 @@ function build_menu(sensors) {
 		});
 
 		var channelSection = $('<details open></details>');
-		channelSection.append('<summary class="mdl-typography--subhead">' + channel.friendly_name + '</summary>');
+		channelSection.append('<summary class="mdl-typography--subhead">' + channel.name + '</summary>');
 
 		$.each(sensors, function (i, device) {
 			$.each(device.channels, function (j, stream) {
@@ -252,7 +250,7 @@ function build_menu(sensors) {
 						}
 
 						if(previous != null) {
-							var prev_duration = dataItem.t - previous.t;
+							var prev_duration = dataItem.time - previous.time;
 							var total_duration = prev_duration + avg_duration;
 
 							var avg = (previous.value + dataItem.value) / 2;
@@ -272,6 +270,18 @@ function build_menu(sensors) {
 							.append('<div class="mdl-typography--caption-color-contrast">' +
 								' Avg: ' + value_avg.toFixed(2) + stream.units +
 								'</div>');
+
+						if(device.cost) {
+                            var cost = value_avg * moment.duration(avg_duration).asHours() * device.cost;
+                            if(cost < 100) {
+                                 content.append('<div class="mdl-typography--caption-color-contrast">' +
+                                    ' Cost: ' + cost.toFixed(1) + 'p</div>')
+                            } else {
+                                cost /= 100;
+                                content.append('<div class="mdl-typography--caption-color-contrast">' +
+                                    ' Cost: £' + cost.toFixed(2) + '</div>')
+                            }
+					    }
 					}
 
 

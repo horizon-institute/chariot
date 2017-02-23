@@ -10,20 +10,19 @@ class Migration(SchemaMigration):
     def forwards(self, orm):
         # Adding model 'Channel'
         db.create_table('sensors_channel', (
-            ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('name', self.gf('django.db.models.fields.CharField')(max_length=32)),
+            ('id', self.gf('django.db.models.fields.CharField')(max_length=32, primary_key=True)),
             ('units', self.gf('django.db.models.fields.CharField')(max_length=10)),
-            ('friendly_name', self.gf('django.db.models.fields.CharField')(max_length=256)),
+            ('name', self.gf('django.db.models.fields.CharField')(max_length=256)),
             ('hidden', self.gf('django.db.models.fields.BooleanField')(default=False)),
         ))
         db.send_create_signal('sensors', ['Channel'])
 
         # Adding model 'Sensor'
         db.create_table('sensors_sensor', (
-            ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
+            ('id', self.gf('django.db.models.fields.CharField')(max_length=30, primary_key=True)),
             ('name', self.gf('django.db.models.fields.CharField')(max_length=200)),
-            ('identifier', self.gf('django.db.models.fields.CharField')(unique=True, max_length=30, db_index=True)),
             ('sensor_type', self.gf('django.db.models.fields.CharField')(max_length=30)),
+            ('cost_channel', self.gf('django.db.models.fields.related.ForeignKey')(blank=True, related_name='+', null=True, to=orm['sensors.Channel'])),
             ('default', self.gf('django.db.models.fields.BooleanField')(default=False)),
         ))
         db.send_create_signal('sensors', ['Sensor'])
@@ -37,16 +36,6 @@ class Migration(SchemaMigration):
         ))
         db.create_unique(m2m_table_name, ['sensor_id', 'channel_id'])
 
-        # Adding model 'SensorReading'
-        db.create_table('sensors_sensorreading', (
-            ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('timestamp', self.gf('django.db.models.fields.DateTimeField')(db_index=True)),
-            ('sensor', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['sensors.Sensor'])),
-            ('channel', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['sensors.Channel'])),
-            ('value', self.gf('django.db.models.fields.FloatField')(default=0)),
-        ))
-        db.send_create_signal('sensors', ['SensorReading'])
-
 
     def backwards(self, orm):
         # Deleting model 'Channel'
@@ -58,35 +47,23 @@ class Migration(SchemaMigration):
         # Removing M2M table for field channels on 'Sensor'
         db.delete_table(db.shorten_name('sensors_sensor_channels'))
 
-        # Deleting model 'SensorReading'
-        db.delete_table('sensors_sensorreading')
-
 
     models = {
         'sensors.channel': {
             'Meta': {'object_name': 'Channel'},
-            'friendly_name': ('django.db.models.fields.CharField', [], {'max_length': '256'}),
             'hidden': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
-            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'name': ('django.db.models.fields.CharField', [], {'max_length': '32'}),
+            'id': ('django.db.models.fields.CharField', [], {'max_length': '32', 'primary_key': 'True'}),
+            'name': ('django.db.models.fields.CharField', [], {'max_length': '256'}),
             'units': ('django.db.models.fields.CharField', [], {'max_length': '10'})
         },
         'sensors.sensor': {
-            'Meta': {'object_name': 'Sensor'},
+            'Meta': {'ordering': "['name']", 'object_name': 'Sensor'},
             'channels': ('django.db.models.fields.related.ManyToManyField', [], {'to': "orm['sensors.Channel']", 'symmetrical': 'False'}),
+            'cost_channel': ('django.db.models.fields.related.ForeignKey', [], {'blank': 'True', 'related_name': "'+'", 'null': 'True', 'to': "orm['sensors.Channel']"}),
             'default': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
-            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'identifier': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '30', 'db_index': 'True'}),
+            'id': ('django.db.models.fields.CharField', [], {'max_length': '30', 'primary_key': 'True'}),
             'name': ('django.db.models.fields.CharField', [], {'max_length': '200'}),
             'sensor_type': ('django.db.models.fields.CharField', [], {'max_length': '30'})
-        },
-        'sensors.sensorreading': {
-            'Meta': {'ordering': "['timestamp']", 'object_name': 'SensorReading'},
-            'channel': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['sensors.Channel']"}),
-            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'sensor': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['sensors.Sensor']"}),
-            'timestamp': ('django.db.models.fields.DateTimeField', [], {'db_index': 'True'}),
-            'value': ('django.db.models.fields.FloatField', [], {'default': '0'})
         }
     }
 

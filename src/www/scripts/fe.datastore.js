@@ -125,11 +125,6 @@ $(function () {
 						channel.selected = false;
 						channel.visible = true;
 
-						var h = fe.logger.plot.get_height();
-						var w = fe.logger.plot.get_width();
-						channel.ySc = d3.scale.linear().domain([0, 1.1 * channel.y_max]).range([0, h]);
-						channel.xSc = d3.time.scale().domain([channel.x_min, channel.x_max]).range([0, w]);
-
 						add_dataset(channel);
 					}
 				});

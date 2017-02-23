@@ -746,6 +746,7 @@ $(function () {
 
 									return "translate(" + mouse[0] + "," + (h - ySc(pos)) +")";
 								}
+								return "translate(-1000,-1000)";
 							});
 					});
 

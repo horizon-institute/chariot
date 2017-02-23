@@ -736,7 +736,7 @@ $(function () {
 								}
 
 								var pos = fe.datastore.get_position(d.data[index - 1], d.data[index], xDate);
-								d3.select(this).select('text').text(pos.toFixed(2));
+								d3.select(this).select('text').text(pos.toFixed(2) + d.units);
 
 								var y_range = get_y_range(d.channel);
 								var ySc = d3.scale.linear().domain([y_range[0], y_range[1]]).range([0, h]);

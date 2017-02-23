@@ -12,629 +12,460 @@ $(function () {
 	$(".progressBar").show();
 
 	fe.logger.plot = (function () {
-		var chart;
+			var chart;
 
-		var w, h;
-		var xSc;
-		var axis_channel_l;
-		var axis_channel_r;
+			var w, h;
+			var xSc;
+			var axis_channel_l;
+			var axis_channel_r;
 
-		var drag_handle_behaviour = null;
-		var selection = {x: 0, w: 0, channels: [], start: 0, end: 0};
-		var selector;
-		var settings;
+			var drag_handle_behaviour = null;
+			var selection = {x: 0, w: 0, channels: [], start: 0, end: 0};
+			var selector;
+			var settings;
 
-		function init(_selector, _settings) {
-			selector = _selector;
-			settings = _settings;
+			function init(_selector, _settings) {
+				selector = _selector;
+				settings = _settings;
 
-			// allow some pixels for right axis
-			w = get_width();
-			h = get_height();
+				// allow some pixels for right axis
+				w = get_width();
+				h = get_height();
 
-			axis_channel_l = settings.axis_channel;
-			axis_channel_r = settings.axis_channel;
-		}
+				axis_channel_l = settings.axis_channel;
+				axis_channel_r = settings.axis_channel;
+			}
 
-		var get_height = function () {
-			return selector.height() - 150;
-		};
+			var get_height = function () {
+				return selector.height() - 150;
+			};
 
-		var get_width = function () {
-			return selector.width() - 120;
-		};
+			var get_width = function () {
+				return selector.width() - 120;
+			};
 
-		var filter_channels = function (state) {
-			// TODO Currently very inefficient!
-			var datasets = fe.datastore.get_datasets();
-			$.each(datasets, function (index, dataset) {
-				var found = false;
-				$.each(state, function (j, item) {
-					if (item.channel == dataset.channel && item.sensor == dataset.sensor) {
-						found = true;
+			var filter_channels = function (state) {
+				// TODO Currently very inefficient!
+				var datasets = fe.datastore.get_datasets();
+				$.each(datasets, function (index, dataset) {
+					var found = false;
+					$.each(state, function (j, item) {
+						if (item.channel == dataset.channel && item.sensor == dataset.sensor) {
+							found = true;
+						}
+					});
+					dataset.visible = found;
+				});
+				redraw();
+				redraw_selection();
+			};
+
+			var set_axis_channel = function (channel, left) {
+				if (left) {
+					axis_channel_l = channel;
+				}
+				else {
+					axis_channel_r = channel;
+				}
+				redraw();
+			};
+
+			var redraw_selection = function () {
+				var datasets = fe.datastore.get_datasets();
+				if (datasets.length > 0) {
+					if (selection.w > 0) {
+						create_selection(selection.x, selection.w, selection.channels);
+					}
+					select_datasets(selection.channels);
+				}
+			};
+
+			var get_x_min = function () {
+				var x_min = -1;
+				$.each(fe.datastore.get_datasets(), function (index, dataset) {
+					if (x_min == -1 || dataset.x_min < x_min) {
+						x_min = dataset.x_min;
 					}
 				});
-				dataset.visible = found;
-			});
-			redraw();
-			redraw_selection();
-		};
+				return x_min;
+			};
 
-		var set_axis_channel = function (channel, left) {
-			if (left) {
-				axis_channel_l = channel;
-			}
-			else {
-				axis_channel_r = channel;
-			}
-			redraw();
-		};
+			var get_x_max = function () {
+				var x_max = -1;
+				$.each(fe.datastore.get_datasets(), function (index, dataset) {
+					if (x_max == -1 || dataset.x_max > x_max) {
+						x_max = dataset.x_max;
+					}
+				});
+				return x_max;
+			};
 
-		var redraw_selection = function () {
-			var datasets = fe.datastore.get_datasets();
-			if (datasets.length > 0) {
-				if (selection.w > 0) {
-					create_selection(selection.x, selection.w, selection.channels);
+			var get_y_min = function (channel_id) {
+				var y_min = -1;
+				$.each(fe.datastore.get_datasets(), function (index, dataset) {
+					if (dataset.channel == channel_id && (y_min == -1 || dataset.y_min < y_min)) {
+						y_min = dataset.y_min;
+					}
+				});
+				return y_min;
+			};
+
+			var get_y_max = function (channel_id) {
+				var y_max = -1;
+				$.each(fe.datastore.get_datasets(), function (index, dataset) {
+					if (dataset.channel == channel_id && (y_max == -1 || dataset.y_max > y_max)) {
+						y_max = dataset.y_max;
+					}
+				});
+				return y_max;
+			};
+
+			var get_y_range = function (channel_id) {
+				var y_min = get_y_min(channel_id);
+				var y_max = get_y_max(channel_id);
+				var pad = (y_max - y_min) / 10;
+				y_max = y_max + pad;
+				y_min = y_min - pad;
+
+				y_max = Math.ceil(y_max / 10) * 10;
+				y_min = Math.floor(y_min / 10) * 10;
+
+				return [y_min, y_max];
+			};
+
+			var redraw = function () {
+				var data;
+
+				w = get_width();
+				h = get_height();
+
+				var x_min = get_x_min();
+				var x_max = get_x_max();
+
+				xSc = d3.time.scale().domain([x_min, x_max]).range([0, w]);
+
+				// clear any existing stuff (in case of refresh)
+				d3.selectAll(selector.toArray()).select("svg").remove();
+
+				// the selector div is defined in the html file
+				chart = d3.selectAll(selector.toArray()).append("svg")
+					.append("g")
+					.attr("transform", "translate(60,42)");
+
+				if (fe.datastore.get_datasets().length === 0) {
+					chart.append("text")
+						.attr("x", 200)
+						.attr("class", "no_data_text")
+						.attr("y", h / 3)
+						.text('No data, yet');
+					return;
 				}
+
+				chart.append("svg:polyline")
+					.attr('class', 'graph-axis')
+					.attr("points", '0,0 0,' + h + ' ' + w + ',' + h + ' ' + w + ',0');
+
+				draw_x_axis();
+				draw_x_grid();
+				if (axis_channel_l || axis_channel_r) {
+					draw_y_grid();
+				}
+				draw_data();
 				select_datasets(selection.channels);
-			}
-		};
 
-		var get_x_min = function () {
-			var x_min = -1;
-			$.each(fe.datastore.get_datasets(), function (index, dataset) {
-				if (x_min == -1 || dataset.x_min < x_min) {
-					x_min = dataset.x_min;
-				}
-			});
-			return x_min;
-		};
+				draw_events();
 
-		var get_x_max = function () {
-			var x_max = -1;
-			$.each(fe.datastore.get_datasets(), function (index, dataset) {
-				if (x_max == -1 || dataset.x_max > x_max) {
-					x_max = dataset.x_max;
-				}
-			});
-			return x_max;
-		};
+				setup_interaction();
+			};
 
-		var get_y_min = function (channel_id) {
-			var y_min = -1;
-			$.each(fe.datastore.get_datasets(), function (index, dataset) {
-				if (dataset.channel == channel_id && (y_min == -1 || dataset.y_min < y_min)) {
-					y_min = dataset.y_min;
-				}
-			});
-			return y_min;
-		};
+			var draw_x_axis = function () {
 
-		var get_y_max = function (channel_id) {
-			var y_max = -1;
-			$.each(fe.datastore.get_datasets(), function (index, dataset) {
-				if (dataset.channel == channel_id && (y_max == -1 || dataset.y_max > y_max)) {
-					y_max = dataset.y_max;
-				}
-			});
-			return y_max;
-		};
+				if (settings.draw_xlabels) {
+					// draw horizontal axis labels
+					chart.selectAll(".xRule")
+						.data(xSc.ticks(10))
+						.enter().append("text")
+						.attr("class", "xRule")
+						.attr("x", function (d) {
+							return xSc(d);
+						})
+						.attr("y", h + 2 + 15)
+						.attr("text-anchor", "middle")
+						.text(function (d) {
+							return moment(d).format("H:mm");
+						});
 
-		var get_y_range = function (channel_id) {
-			var y_min = get_y_min(channel_id);
-			var y_max = get_y_max(channel_id);
-			var pad = (y_max - y_min) / 10;
-			y_max = y_max + pad;
-			y_min = y_min - pad;
+					// draw a new row of horizontal axis labels
+					chart.selectAll(".xRule2")
+						.data(xSc.ticks(d3.time.days))
+						.enter().append("text")
+						.attr("class", "xRule2")
+						.attr("x", function (d) {
+							return xSc(d);
+						})
+						.attr("y", h + 16 + 15)
+						.attr("text-anchor", "middle")
+						.text(function (d) {
+							return moment(d).format("ddd Do");
+						});
 
-			y_max = Math.ceil(y_max / 10) * 10;
-			y_min = Math.floor(y_min / 10) * 10;
-
-			return [y_min, y_max];
-		};
-
-		var redraw = function () {
-			var data;
-
-			w = get_width();
-			h = get_height();
-
-			var x_min = get_x_min();
-			var x_max = get_x_max();
-
-			xSc = d3.time.scale().domain([x_min, x_max]).range([0, w]);
-
-			// clear any existing stuff (in case of refresh)
-			d3.selectAll(selector.toArray()).select("svg").remove();
-
-			// the selector div is defined in the html file
-			chart = d3.selectAll(selector.toArray()).append("svg")
-				.append("g")
-				.attr("transform", "translate(60,42)");
-
-			if (fe.datastore.get_datasets().length === 0) {
-				chart.append("text")
-					.attr("x", 200)
-					.attr("class", "no_data_text")
-					.attr("y", h / 3)
-					.text('No data, yet');
-				return;
-			}
-
-			chart.append("svg:polyline")
-				.attr('class', 'graph-axis')
-				.attr("points", '0,0 0,' + h + ' ' + w + ',' + h + ' ' + w + ',0');
-
-			draw_x_axis();
-			draw_x_grid();
-			if (axis_channel_l || axis_channel_r) {
-				draw_y_grid();
-			}
-			draw_data();
-			select_datasets(selection.channels);
-
-			draw_events();
-
-			setup_interaction();
-		};
-
-		var draw_x_axis = function () {
-
-			if (settings.draw_xlabels) {
-				// draw horizontal axis labels
-				chart.selectAll(".xRule")
-					.data(xSc.ticks(10))
-					.enter().append("text")
-					.attr("class", "xRule")
-					.attr("x", function (d) {
-						return xSc(d);
-					})
-					.attr("y", h + 2 + 15)
-					.attr("text-anchor", "middle")
-					.text(function (d) {
-						return moment(d).format("H:mm");
-					});
-
-				// draw a new row of horizontal axis labels
-				chart.selectAll(".xRule2")
-					.data(xSc.ticks(d3.time.days))
-					.enter().append("text")
-					.attr("class", "xRule2")
-					.attr("x", function (d) {
-						return xSc(d);
-					})
-					.attr("y", h + 16 + 15)
-					.attr("text-anchor", "middle")
-					.text(function (d) {
-						return moment(d).format("ddd Do");
-					});
-
-				// draw horizontal axis ticks
-				chart.selectAll(".xTicks")
-					.data(xSc.ticks(10))
-					.enter().append("line")
-					.attr('class', 'graph-axis-mark')
-					.attr("x1", xSc)
-					.attr("x2", xSc)
-					.attr("y1", h - 5)
-					.attr("y2", h)
-					.style("stroke", "#333");
-			}
-		};
-
-		var draw_x_grid = function () {
-			chart.selectAll(".xGrid")
-				.data(xSc.ticks(d3.time.days))
-				.enter().append("line")
-				.attr('class', 'graph-divider')
-				.attr("x1", xSc)
-				.attr("x2", xSc)
-				.attr("y1", 0)
-				.attr("y2", h)
-		};
-
-		var draw_y_grid = function () {
-			var fmt = d3.format('.0f');
-
-			//// Left axis
-
-			if (axis_channel_l) {
-				var y_range_l = get_y_range(axis_channel_l);
-				var ySc_l = d3.scale.linear().domain([y_range_l[0], y_range_l[1]]).range([0, h]);
-				var channel_l = fe.datastore.lookup_channel(axis_channel_l);
-
-				// draw vertical axis "ticks" (they are actually grid lines)
-				chart.selectAll(".yTicks-l")
-					.data(ySc_l.ticks(10))
-					.enter().append("line")
-					.attr('class', 'graph-axis-mark')
-					.attr("x1", 0)
-					.attr("x2", 4)
-					.attr("y1", function (d) {
-						return h - ySc_l(d);
-					})
-					.attr("y2", function (d) {
-						return h - ySc_l(d);
-					})
-					.style("stroke", "#333");
-
-				// draw vertical axis labels
-				chart.selectAll(".yRule-l")
-					.data(ySc_l.ticks(10))
-					.enter().append("text")
-					.attr("class", "yRule-l")
-					.attr("x", -5)
-					.attr("y", function (d) {
-						return h - ySc_l(d);
-					})
-					.attr("dy", 5)
-					.attr("text-anchor", "end")
-					.text(fmt);
-
-				chart.append("text")
-					.attr("class", "yLabel-l")
-					.attr("x", 0)
-					.attr("y", -10)
-					.attr("text-anchor", "middle")
-					.text(channel_l.units);
-			}
-			//// Right axis
-
-			if (axis_channel_r) {
-				var y_range_r = get_y_range(axis_channel_r);
-				var ySc_r = d3.scale.linear().domain([y_range_r[0], y_range_r[1]]).range([0, h]);
-				var channel_r = fe.datastore.lookup_channel(axis_channel_r);
-				if(channel_r) {
-					// draw vertical axis "ticks" (they are actually grid lines)
-					chart.selectAll(".yTicks-r")
-						.data(ySc_r.ticks(10))
+					// draw horizontal axis ticks
+					chart.selectAll(".xTicks")
+						.data(xSc.ticks(10))
 						.enter().append("line")
 						.attr('class', 'graph-axis-mark')
-						.attr("x1", w - 4)
-						.attr("x2", w)
+						.attr("x1", xSc)
+						.attr("x2", xSc)
+						.attr("y1", h - 5)
+						.attr("y2", h)
+						.style("stroke", "#333");
+				}
+			};
+
+			var draw_x_grid = function () {
+				chart.selectAll(".xGrid")
+					.data(xSc.ticks(d3.time.days))
+					.enter().append("line")
+					.attr('class', 'graph-divider')
+					.attr("x1", xSc)
+					.attr("x2", xSc)
+					.attr("y1", 0)
+					.attr("y2", h)
+			};
+
+			var draw_y_grid = function () {
+				var fmt = d3.format('.0f');
+
+				//// Left axis
+
+				if (axis_channel_l) {
+					var y_range_l = get_y_range(axis_channel_l);
+					var ySc_l = d3.scale.linear().domain([y_range_l[0], y_range_l[1]]).range([0, h]);
+					var channel_l = fe.datastore.lookup_channel(axis_channel_l);
+
+					// draw vertical axis "ticks" (they are actually grid lines)
+					chart.selectAll(".yTicks-l")
+						.data(ySc_l.ticks(10))
+						.enter().append("line")
+						.attr('class', 'graph-axis-mark')
+						.attr("x1", 0)
+						.attr("x2", 4)
 						.attr("y1", function (d) {
-							return h - ySc_r(d);
+							return h - ySc_l(d);
 						})
 						.attr("y2", function (d) {
-							return h - ySc_r(d);
+							return h - ySc_l(d);
 						})
 						.style("stroke", "#333");
 
 					// draw vertical axis labels
-					chart.selectAll(".yRule-r")
-						.data(ySc_r.ticks(10))
+					chart.selectAll(".yRule-l")
+						.data(ySc_l.ticks(10))
 						.enter().append("text")
-						.attr("class", "yRule-r")
-						.attr("x", w + 5)
+						.attr("class", "yRule-l")
+						.attr("x", -5)
 						.attr("y", function (d) {
-							return h - ySc_r(d);
+							return h - ySc_l(d);
 						})
 						.attr("dy", 5)
-						.attr("text-anchor", "start")
+						.attr("text-anchor", "end")
 						.text(fmt);
 
 					chart.append("text")
-						.attr("class", "yLabel-r")
-						.attr("x", w)
+						.attr("class", "yLabel-l")
+						.attr("x", 0)
 						.attr("y", -10)
 						.attr("text-anchor", "middle")
-						.text(channel_r.units);
+						.text(channel_l.units);
 				}
-			}
-		};
+				//// Right axis
 
-		var draw_data = function () {
-			var data_sets = fe.datastore.get_datasets();
+				if (axis_channel_r) {
+					var y_range_r = get_y_range(axis_channel_r);
+					var ySc_r = d3.scale.linear().domain([y_range_r[0], y_range_r[1]]).range([0, h]);
+					var channel_r = fe.datastore.lookup_channel(axis_channel_r);
+					if (channel_r) {
+						// draw vertical axis "ticks" (they are actually grid lines)
+						chart.selectAll(".yTicks-r")
+							.data(ySc_r.ticks(10))
+							.enter().append("line")
+							.attr('class', 'graph-axis-mark')
+							.attr("x1", w - 4)
+							.attr("x2", w)
+							.attr("y1", function (d) {
+								return h - ySc_r(d);
+							})
+							.attr("y2", function (d) {
+								return h - ySc_r(d);
+							})
+							.style("stroke", "#333");
 
-			$.each(data_sets, function (index, data_set) {
-				// var y_min = get_y_min(data_set.channel);
-				// var y_max = get_y_max(data_set.channel);
-				var y_range = get_y_range(data_set.channel);
-				var ySc = d3.scale.linear().domain([y_range[0], y_range[1]]).range([0, h]);
-				var d3line = d3.svg.line()
-					.x(function (d) {
-						return xSc(d.time);
+						// draw vertical axis labels
+						chart.selectAll(".yRule-r")
+							.data(ySc_r.ticks(10))
+							.enter().append("text")
+							.attr("class", "yRule-r")
+							.attr("x", w + 5)
+							.attr("y", function (d) {
+								return h - ySc_r(d);
+							})
+							.attr("dy", 5)
+							.attr("text-anchor", "start")
+							.text(fmt);
+
+						chart.append("text")
+							.attr("class", "yLabel-r")
+							.attr("x", w)
+							.attr("y", -10)
+							.attr("text-anchor", "middle")
+							.text(channel_r.units);
+					}
+				}
+			};
+
+			var draw_data = function () {
+				var data_sets = fe.datastore.get_datasets();
+
+				$.each(data_sets, function (index, data_set) {
+					// var y_min = get_y_min(data_set.channel);
+					// var y_max = get_y_max(data_set.channel);
+					var y_range = get_y_range(data_set.channel);
+					var ySc = d3.scale.linear().domain([y_range[0], y_range[1]]).range([0, h]);
+					var d3line = d3.svg.line()
+						.x(function (d) {
+							return xSc(d.time);
+						})
+						.y(function (d) {
+							return h - ySc(d.value);
+						});
+
+					var line = chart.append("svg:path")
+						.attr('class', 'graph-line')
+						.style("stroke", data_set.colour)
+						.attr("d", d3line(data_set.data));
+
+					if (!data_set.visible) {
+						line.style("display", "none");
+					}
+				});
+			};
+
+			var draw_antievents = function () {
+				var antiEvents = [{
+					start: get_x_min(),
+					end: get_x_max()
+				}];
+
+				var mouseG = chart.append("g")
+					.attr("class", "mouse-over-effects");
+
+				mouseG.append("path")
+					.attr("class", "mouse-line")
+					.style("stroke", "black")
+					.style("stroke-width", "1px")
+					.style("opacity", "0");
+
+				var data_sets = fe.datastore.get_datasets();
+
+				var mousePerLine = mouseG.selectAll('.mouse-per-line')
+					.data(data_sets)
+					.enter()
+					.append("g")
+					.attr("class", "mouse-per-line");
+
+				mousePerLine.append("circle")
+					.attr("r", 7)
+					.style("stroke", function(d) {
+						return d.colour;
 					})
-					.y(function (d) {
-						return h - ySc(d.value);
+					.style("fill", "none")
+					.style("stroke-width", "1px")
+					.style("opacity", "0");
+
+				mousePerLine.append("text")
+					.attr("transform", "translate(10,3)");
+
+
+
+				// the .bgs are used for listening to drag events
+				// they are the segments of the graph between events
+				chart.selectAll('.graph-bg').remove();
+
+				chart.selectAll('.graph-bg')
+					.data(antiEvents).enter()
+					.append("rect")
+					.attr('class', 'graph-bg')
+					.attr("y", 0)
+					.attr("x", function (d) {
+						return xSc(d.start);
+					})
+					.attr("height", h)
+					.attr("width", function (d) {
+						return xSc(d.end) - xSc(d.start);
 					});
 
-				var line = chart.append("svg:path")
-					.attr('class', 'graph-line')
-					.style("stroke", data_set.colour)
-					.attr("d", d3line(data_set.data));
+				//var lines = document.getElementsByClassName('line');
+				//
+				// var mousePerLine = mouseG.selectAll('.mouse-per-line')
+				// 	.data(cities)
+				// 	.enter()
+				// 	.append("g")
+				// 	.attr("class", "mouse-per-line");
+				//
+				// mousePerLine.append("circle")
+				// 	.attr("r", 7)
+				// 	.style("stroke", function(d) {
+				// 		return color(d.name);
+				// 	})
+				// 	.style("fill", "none")
+				// 	.style("stroke-width", "1px")
+				// 	.style("opacity", "0");
+				//
+				// mousePerLine.append("text")
+				// 	.attr("transform", "translate(10,3)");
 
-				if (!data_set.visible) {
-					line.style("display", "none");
-				}
-			});
-		};
+				setup_interaction();
+			};
 
-		var draw_antievents = function () {
-			var antiEvents = [{
-				start: get_x_min(),
-				end: get_x_max()
-			}];
-			// the .bgs are used for listening to drag events
-			// they are the segments of the graph between events
-			chart.selectAll('.graph-bg').remove();
-
-			chart.selectAll('.graph-bg')
-				.data(antiEvents).enter()
-				.append("rect")
-				.attr('class', 'graph-bg')
-				.attr("y", 0)
-				.attr("x", function (d) {
-					return xSc(d.start);
-				})
-				.attr("height", h)
-				.attr("width", function (d) {
-					return xSc(d.end) - xSc(d.start);
+			var get_flat_annotations = function () {
+				var flat_annotations = [];
+				$.each(fe.datastore.get_annotations(), function (key, annotation) {
+					flat_annotations.push(annotation);
 				});
 
-			setup_interaction();
-		};
-
-		var get_flat_annotations = function () {
-			var flat_annotations = [];
-			$.each(fe.datastore.get_annotations(), function (key, annotation) {
-				flat_annotations.push(annotation);
-			});
-
-			// Sort the events chronologically
-			flat_annotations = flat_annotations.sort(function (a, b) {
-				return a.start - b.start;
-			});
-
-			// Filter out any which end too far to the lhs of the plot
-			flat_annotations = flat_annotations.filter(function (d) {
-				return xSc(d.end) > 10;
-			});
-			return flat_annotations;
-		};
-
-		var draw_events = function () {
-			var flat_annotations = get_flat_annotations();
-			fe.logger.annotation.draw_events(flat_annotations);
-
-			draw_antievents();
-		};
-
-		var get_chart = function () {
-			return chart;
-		};
-
-		var limit_bounds = function (container, x0, x1) {
-			var cntX, cntW, w;
-
-			cntX = parseFloat(container.attr('x'));
-			cntW = parseFloat(container.attr('width'));
-			// constrain x1 to the container (x0 is bound to be inside, 
-			// because that's a click event)
-			// (i.e. x1 is at most the rhs of the container, 
-			// at least the lhs of the container)
-			x1 = Math.max(cntX, Math.min(cntW + cntX - 1, x1));
-
-			w = x1 - x0;
-
-			if (w < 0) {
-				x0 = x1;
-				w = -w;
-			}
-			return {'x': x0, 'w': w};
-		};
-
-		var clear_selection = function (trigger_events) {
-			if (typeof trigger_events === 'undefined') {
-				trigger_events = true;
-			}
-			if (trigger_events) {
-				$("#chart").trigger("logger:click", {
-					'button': 'clear_selection',
-					'params': {}
-				});
-			}
-			selection.x = 0;
-			selection.w = 0;
-			selection.channels = [];
-			chart.selectAll('.selection').remove();
-			chart.selectAll('.selection_handle').remove();
-			var data_sets = fe.datastore.get_datasets();
-			$.each(data_sets, function (index, dataset) {
-				dataset.selected = false;
-			});
-			select_datasets(selection.channels);
-		};
-
-		var resize_selection = function (x, w) {
-			var t0 = moment(get_time_for_x(x));
-			var t1 = moment(get_time_for_x(x + w));
-
-			// Update the width of the selection.
-			chart.selectAll('.selection')
-				.attr('x', x)
-				.attr("width", w);
-
-			// Move the drag handles, and labels, to the correct positions.
-			chart.selectAll('.selection_handle.end')
-				.attr("x", x + w - 10);
-			chart.selectAll('.selection_handle.start')
-				.attr("x", x);
-
-			chart.selectAll('.selection_handle.start.label')
-				.attr("x", x - 5)
-				.text('start: ' + t0.format('H:mm'));
-			chart.selectAll('.selection_handle.end.label')
-				.attr("x", x + w + 5)
-				.text('end: ' + t1.format('H:mm'));
-		};
-
-		var create_selection = function (x, w, selections, trigger_events) {
-
-			if (typeof trigger_events === 'undefined') {
-				trigger_events = true;
-			}
-
-			clear_selection(false);
-
-			selection.x = x;
-			selection.w = w;
-			selection.channels = selections;
-
-			select_datasets(selection.channels);
-
-			// Create a new selection rectangle, initially with width 1px.
-			chart.append('rect')
-				.attr('class', 'selection')
-				.attr("y", 0)
-				.attr("height", h)
-				.attr("x", selection.x)
-				.attr("width", selection.w)
-				.attr("opacity", "0.5");
-
-			if (settings.handles) {
-				// Draw left drag handle.
-				chart.append('svg:image')
-					.attr("xlink:href", server_url + 'images/selection_handle.svg')
-					.attr('class', 'selection_handle start')
-					.attr("y", h / 2 - 12)
-					.attr("height", 24)
-					.attr("x", selection.x)
-					.attr("width", 12);
-
-				var t = moment(get_time_for_x(selection.x));
-				var t2 = moment(get_time_for_x(selection.x + selection.w));
-
-				// Add text at left of selection
-				chart.append('text')
-					.attr('class', 'selection_handle start label')
-					.attr("y", h / 2 - 30)
-					.attr("x", selection.x - 5)
-					.attr("fill", "black")
-					.attr("text-anchor", "end")
-					.text('start: ' + t.format('H:mm'));
-
-				// Draw right drag handle.
-				chart.append('svg:image')
-					.attr("xlink:href", server_url + 'images/selection_handle.svg')
-					.attr('class', 'selection_handle end')
-					.attr("y", h / 2 - 12)
-					.attr("height", 24)
-					.attr("x", selection.x + selection.w - 12)
-					.attr("width", 12);
-
-				// Add text at right of selection
-				chart.append('text')
-					.attr('class', 'selection_handle end label')
-					.attr("y", h / 2 - 30)
-					.attr("x", selection.x + selection.w + 5)
-					.attr("fill", "black")
-					.attr("text-anchor", "start")
-					.text('end: ' + t2.format('H:mm'));
-
-
-				// Add drag behaviour for handles.
-				d3.selectAll('.selection_handle').call(drag_handle_behaviour);
-			}
-
-			if (trigger_events) {
-				$("#chart").trigger("logger:click", {
-					'button': 'create_selection',
-					'params': {}
-				});
-			}
-			// enable_selection_click();
-		};
-
-		var on_selection_click = function () {
-			var event = {}, temp;
-
-			if (d3.event) {
-				d3.event.preventDefault();
-			}
-			var x = selection.x;
-			var w = selection.w;
-
-			event.start = get_time_for_x(x);
-			event.end = get_time_for_x(x + w);
-
-			if (event.start >= event.end) {
-				temp = event.start;
-				event.start = event.end;
-				event.end = temp;
-			}
-
-			event.delta = event.end.getTime() - event.start.getTime();
-
-			var pairs = [];
-			// Store the selected channels.
-			$.each(fe.datastore.get_datasets(), function (index, dataset) {
-				if (dataset.selected) {
-					pairs.push({'sensor': {'id': dataset.sensor}, 'channel': {'id': dataset.channel}});
-				}
-			});
-
-			event.pairs = pairs;
-		};
-
-		var enable_selection_click = function () {
-			chart.selectAll('.selection')
-				.on('contextmenu', on_selection_click)
-				.on('click', on_selection_click);
-		};
-
-		var select_datasets = function (selection) {
-			var data_sets = fe.datastore.get_datasets();
-
-			// Deselect everything
-			$.each(data_sets, function (index, dataset) {
-				dataset.selected = false;
-			});
-
-			// Select ones to show
-			$.each(selection, function (index, value) {
-				data_sets[value].selected = true;
-			});
-			d3.selectAll('path.linechart').classed("filtered", function (d, i) {
-				return selection.indexOf(i) == -1;
-			});
-		};
-
-		// interaction
-		// create a new nested scope to avoid variables mess 
-		var setup_interaction = function () {
-			var container = null;
-
-			var drag_handle_move = function () {
-				var x0, x1, w;
-
-				// get the container horizontal bounds
-				var cntX = parseFloat(container.attr('x'));
-				var cntW = parseFloat(container.attr('width'));
-
-				var handle_x = parseFloat(d3.select(this).attr('x'));
-				var handles_coords = d3.selectAll('image.selection_handle')[0].map(function (d) {
-					return parseFloat(d3.select(d).attr('x'));
+				// Sort the events chronologically
+				flat_annotations = flat_annotations.sort(function (a, b) {
+					return a.start - b.start;
 				});
 
-				var newX = parseFloat(chart.select('.selection').attr('x'));
+				// Filter out any which end too far to the lhs of the plot
+				flat_annotations = flat_annotations.filter(function (d) {
+					return xSc(d.end) > 10;
+				});
+				return flat_annotations;
+			};
 
-				if (handle_x === d3.max(handles_coords)) {
-					// right (end) handle
-					x0 = newX;
-					x1 = fe.logger.selection.mouse_x(this);
-					// constrain x1 to the container (x0 is bound to be inside,
-					// because that's a click event)
-					x1 = Math.max(cntX, Math.min(cntW + cntX, x1));
-				} else {
-					// left (start) handle
-					w = parseFloat(chart.select('.selection').attr('width'));
+			var draw_events = function () {
+				var flat_annotations = get_flat_annotations();
+				fe.logger.annotation.draw_events(flat_annotations);
 
-					x0 = fe.logger.selection.mouse_x(this);
-					x1 = newX + w;
+				draw_antievents();
+			};
 
-					x0 = Math.max(cntX, Math.min(cntW + cntX, x0));
-				}
+			var get_chart = function () {
+				return chart;
+			};
+
+			var limit_bounds = function (container, x0, x1) {
+				var cntX, cntW, w;
+
+				cntX = parseFloat(container.attr('x'));
+				cntW = parseFloat(container.attr('width'));
+				// constrain x1 to the container (x0 is bound to be inside,
+				// because that's a click event)
+				// (i.e. x1 is at most the rhs of the container,
+				// at least the lhs of the container)
+				x1 = Math.max(cntX, Math.min(cntW + cntX - 1, x1));
 
 				w = x1 - x0;
 
@@ -642,117 +473,387 @@ $(function () {
 					x0 = x1;
 					w = -w;
 				}
-
-				resize_selection(x0, w);
+				return {'x': x0, 'w': w};
 			};
 
-			if (settings.enable_selection) {
-				var drag_behaviour = d3.behavior.drag()
-					.on("dragstart", function () {
-						fe.logger.selection.drag_start(this);
+			var clear_selection = function (trigger_events) {
+				if (typeof trigger_events === 'undefined') {
+					trigger_events = true;
+				}
+				if (trigger_events) {
+					$("#chart").trigger("logger:click", {
+						'button': 'clear_selection',
+						'params': {}
+					});
+				}
+				selection.x = 0;
+				selection.w = 0;
+				selection.channels = [];
+				chart.selectAll('.selection').remove();
+				chart.selectAll('.selection_handle').remove();
+				var data_sets = fe.datastore.get_datasets();
+				$.each(data_sets, function (index, dataset) {
+					dataset.selected = false;
+				});
+				select_datasets(selection.channels);
+			};
+
+			var resize_selection = function (x, w) {
+				var t0 = moment(get_time_for_x(x));
+				var t1 = moment(get_time_for_x(x + w));
+
+				// Update the width of the selection.
+				chart.selectAll('.selection')
+					.attr('x', x)
+					.attr("width", w);
+
+				// Move the drag handles, and labels, to the correct positions.
+				chart.selectAll('.selection_handle.end')
+					.attr("x", x + w - 10);
+				chart.selectAll('.selection_handle.start')
+					.attr("x", x);
+
+				chart.selectAll('.selection_handle.start.label')
+					.attr("x", x - 5)
+					.text('start: ' + t0.format('H:mm'));
+				chart.selectAll('.selection_handle.end.label')
+					.attr("x", x + w + 5)
+					.text('end: ' + t1.format('H:mm'));
+			};
+
+			var create_selection = function (x, w, selections, trigger_events) {
+
+				if (typeof trigger_events === 'undefined') {
+					trigger_events = true;
+				}
+
+				clear_selection(false);
+
+				selection.x = x;
+				selection.w = w;
+				selection.channels = selections;
+
+				select_datasets(selection.channels);
+
+				// Create a new selection rectangle, initially with width 1px.
+				chart.append('rect')
+					.attr('class', 'selection')
+					.attr("y", 0)
+					.attr("height", h)
+					.attr("x", selection.x)
+					.attr("width", selection.w)
+					.attr("opacity", "0.5");
+
+				if (settings.handles) {
+					// Draw left drag handle.
+					chart.append('svg:image')
+						.attr("xlink:href", server_url + 'images/selection_handle.svg')
+						.attr('class', 'selection_handle start')
+						.attr("y", h / 2 - 12)
+						.attr("height", 24)
+						.attr("x", selection.x)
+						.attr("width", 12);
+
+					var t = moment(get_time_for_x(selection.x));
+					var t2 = moment(get_time_for_x(selection.x + selection.w));
+
+					// Add text at left of selection
+					chart.append('text')
+						.attr('class', 'selection_handle start label')
+						.attr("y", h / 2 - 30)
+						.attr("x", selection.x - 5)
+						.attr("fill", "black")
+						.attr("text-anchor", "end")
+						.text('start: ' + t.format('H:mm'));
+
+					// Draw right drag handle.
+					chart.append('svg:image')
+						.attr("xlink:href", server_url + 'images/selection_handle.svg')
+						.attr('class', 'selection_handle end')
+						.attr("y", h / 2 - 12)
+						.attr("height", 24)
+						.attr("x", selection.x + selection.w - 12)
+						.attr("width", 12);
+
+					// Add text at right of selection
+					chart.append('text')
+						.attr('class', 'selection_handle end label')
+						.attr("y", h / 2 - 30)
+						.attr("x", selection.x + selection.w + 5)
+						.attr("fill", "black")
+						.attr("text-anchor", "start")
+						.text('end: ' + t2.format('H:mm'));
+
+
+					// Add drag behaviour for handles.
+					d3.selectAll('.selection_handle').call(drag_handle_behaviour);
+				}
+
+				if (trigger_events) {
+					$("#chart").trigger("logger:click", {
+						'button': 'create_selection',
+						'params': {}
+					});
+				}
+				// enable_selection_click();
+			};
+
+			var on_selection_click = function () {
+				var event = {}, temp;
+
+				if (d3.event) {
+					d3.event.preventDefault();
+				}
+				var x = selection.x;
+				var w = selection.w;
+
+				event.start = get_time_for_x(x);
+				event.end = get_time_for_x(x + w);
+
+				if (event.start >= event.end) {
+					temp = event.start;
+					event.start = event.end;
+					event.end = temp;
+				}
+
+				event.delta = event.end.getTime() - event.start.getTime();
+
+				var pairs = [];
+				// Store the selected channels.
+				$.each(fe.datastore.get_datasets(), function (index, dataset) {
+					if (dataset.selected) {
+						pairs.push({'sensor': {'id': dataset.sensor}, 'channel': {'id': dataset.channel}});
+					}
+				});
+
+				event.pairs = pairs;
+			};
+
+			var enable_selection_click = function () {
+				chart.selectAll('.selection')
+					.on('contextmenu', on_selection_click)
+					.on('click', on_selection_click);
+			};
+
+			var select_datasets = function (selection) {
+				var data_sets = fe.datastore.get_datasets();
+
+				// Deselect everything
+				$.each(data_sets, function (index, dataset) {
+					dataset.selected = false;
+				});
+
+				// Select ones to show
+				$.each(selection, function (index, value) {
+					data_sets[value].selected = true;
+				});
+				d3.selectAll('path.linechart').classed("filtered", function (d, i) {
+					return selection.indexOf(i) == -1;
+				});
+			};
+
+			// interaction
+			// create a new nested scope to avoid variables mess
+			var setup_interaction = function () {
+				var container = null;
+
+				var drag_handle_move = function () {
+					var x0, x1, w;
+
+					// get the container horizontal bounds
+					var cntX = parseFloat(container.attr('x'));
+					var cntW = parseFloat(container.attr('width'));
+
+					var handle_x = parseFloat(d3.select(this).attr('x'));
+					var handles_coords = d3.selectAll('image.selection_handle')[0].map(function (d) {
+						return parseFloat(d3.select(d).attr('x'));
+					});
+
+					var newX = parseFloat(chart.select('.selection').attr('x'));
+
+					if (handle_x === d3.max(handles_coords)) {
+						// right (end) handle
+						x0 = newX;
+						x1 = fe.logger.selection.mouse_x(this);
+						// constrain x1 to the container (x0 is bound to be inside,
+						// because that's a click event)
+						x1 = Math.max(cntX, Math.min(cntW + cntX, x1));
+					} else {
+						// left (start) handle
+						w = parseFloat(chart.select('.selection').attr('width'));
+
+						x0 = fe.logger.selection.mouse_x(this);
+						x1 = newX + w;
+
+						x0 = Math.max(cntX, Math.min(cntW + cntX, x0));
+					}
+
+					w = x1 - x0;
+
+					if (w < 0) {
+						x0 = x1;
+						w = -w;
+					}
+
+					resize_selection(x0, w);
+				};
+
+				d3.selectAll('.graph-bg')
+					.on('mouseout', function () { // on mouse out hide line, circles and text
+						d3.select(".mouse-line")
+							.style("opacity", "0");
+						d3.selectAll(".mouse-per-line circle")
+							.style("opacity", "0");
+						d3.selectAll(".mouse-per-line text")
+							.style("opacity", "0");
 					})
-					.on("drag", function () {
-						fe.logger.selection.drag_move(this);
+					.on('mouseover', function () { // on mouse in show line, circles and text
+						d3.select(".mouse-line")
+							.style("opacity", "0.2");
+						d3.selectAll(".mouse-per-line circle")
+							.style("opacity", "1");
+						d3.selectAll(".mouse-per-line text")
+							.style("opacity", "1");
+					})
+					.on('mousemove', function () { // mouse moving over canvas
+						var mouse = d3.mouse(this);
+						d3.select(".mouse-line")
+							.attr("d", function () {
+								var d = "M" + mouse[0] + "," + get_height();
+								d += " " + mouse[0] + "," + 0;
+								return d;
+							});
+
+						d3.selectAll(".mouse-per-line")
+							.attr("transform", function(d, i) {
+								var xDate = get_time_for_x(mouse[0]);
+								var index = 0;
+								while(index < d.data.length) {
+									if(d.data[index].time > xDate) {
+										break;
+									}
+									index++;
+								}
+
+								var pos = fe.datastore.get_position(d.data[index - 1], d.data[index], xDate);
+								d3.select(this).select('text').text(pos.toFixed(2));
+
+								var y_range = get_y_range(d.channel);
+								var ySc = d3.scale.linear().domain([y_range[0], y_range[1]]).range([0, h]);
+
+
+								return "translate(" + mouse[0] + "," + (h - ySc(pos)) +")";
+							});
+					});
+
+				if (settings.enable_selection) {
+					var drag_behaviour = d3.behavior.drag()
+						.on("dragstart", function () {
+							fe.logger.selection.drag_start(this);
+						})
+						.on("drag", function () {
+							fe.logger.selection.drag_move(this);
+						})
+						.on("dragend", function () {
+							fe.logger.selection.drag_end(this);
+						});
+
+					d3.selectAll('.graph-bg').call(drag_behaviour);
+				}
+
+				drag_handle_behaviour = d3.behavior.drag()
+					.on("dragstart", function () {
+
+						d3.selectAll('.graph-bg').call(drag_handle_aux_behaviour);
+
+						// find the bg container we are in
+						d3.selectAll('.graph-bg').each(function () {
+							var cx, bg_x, bg_w, bg_rhs, curr = d3.select(this);
+							cx = fe.logger.selection.mouse_x(this);
+							bg_x = parseInt(curr.attr('x'), 10);
+							bg_w = parseInt(curr.attr('width'), 10);
+							bg_rhs = bg_x + bg_w;
+							if (cx >= bg_x &&
+								cx <= bg_rhs) {
+								container = curr;
+							}
+						});
+
 					})
 					.on("dragend", function () {
-						fe.logger.selection.drag_end(this);
-					});
+						d3.selectAll('.graph-bg').call(drag_behaviour);
+					})
+					.on("drag", drag_handle_move);
 
-				d3.selectAll('.graph-bg').call(drag_behaviour);
-			}
+				var drag_handle_aux_behaviour = d3.behavior.drag()
+					.on("drag", drag_handle_move);
+			};
 
-			drag_handle_behaviour = d3.behavior.drag()
-				.on("dragstart", function () {
+			var get_selection = function () {
+				return selection;
+			};
 
-					d3.selectAll('.graph-bg').call(drag_handle_aux_behaviour);
+			var get_x_for_time = function (t) {
+				return xSc(t);
+			};
 
-					// find the bg container we are in
-					d3.selectAll('.graph-bg').each(function () {
-						var cx, bg_x, bg_w, bg_rhs, curr = d3.select(this);
-						cx = fe.logger.selection.mouse_x(this);
-						bg_x = parseInt(curr.attr('x'), 10);
-						bg_w = parseInt(curr.attr('width'), 10);
-						bg_rhs = bg_x + bg_w;
-						if (cx >= bg_x &&
-							cx <= bg_rhs) {
-							container = curr;
-						}
-					});
+			var get_time_for_x = function (x) {
+				var t = xSc.invert(x);
+				t.setMilliseconds(0);
+				t.setMinutes((t.getMinutes() + t.getSeconds() / 60).toFixed(0));
+				return t;
+			};
 
-				})
-				.on("dragend", function () {
-					d3.selectAll('.graph-bg').call(drag_behaviour);
-				})
-				.on("drag", drag_handle_move);
-
-			var drag_handle_aux_behaviour = d3.behavior.drag()
-				.on("drag", drag_handle_move);
-		};
-
-		var get_selection = function () {
-			return selection;
-		};
-
-		var get_x_for_time = function (t) {
-			return xSc(t);
-		};
-
-		var get_time_for_x = function (x) {
-			var t = xSc.invert(x);
-			t.setMilliseconds(0);
-			t.setMinutes((t.getMinutes() + t.getSeconds() / 60).toFixed(0));
-			return t;
-		};
-
-		// export the API
-		return {
-			init: init,
-			redraw: redraw,
-			clear_selection: function (trigger_events) {
-				clear_selection(trigger_events);
-			},
-			create_selection: function (x, w, selections, trigger_events) {
-				create_selection(x, w, selections, trigger_events);
-			},
-			resize_selection: function (x, w) {
-				resize_selection(x, w);
-			},
-			limit_bounds: function (container, x0, x1) {
-				return limit_bounds(container, x0, x1);
-			},
-			enable_selection_click: function () {
-				enable_selection_click();
-			},
-			get_selection: function () {
-				return get_selection();
-			},
-			get_chart: function () {
-				return get_chart();
-			},
-			get_time_for_x: function (x) {
-				return get_time_for_x(x);
-			},
-			get_x_for_time: function (t) {
-				return get_x_for_time(t);
-			},
-			get_width: function () {
-				return get_width();
-			},
-			get_height: function () {
-				return get_height();
-			},
-			filter_channels: function (state) {
-				return filter_channels(state);
-			},
-			set_axis_channel: function (channel, left) {
-				return set_axis_channel(channel, left);
-			},
-			draw_events: function (suggestions) {
-				return draw_events(suggestions);
-			},
-			draw_antievents: function () {
-				return draw_antievents();
-			}
-		};
-	}());
+			// export the API
+			return {
+				init: init,
+				redraw: redraw,
+				clear_selection: function (trigger_events) {
+					clear_selection(trigger_events);
+				},
+				create_selection: function (x, w, selections, trigger_events) {
+					create_selection(x, w, selections, trigger_events);
+				},
+				resize_selection: function (x, w) {
+					resize_selection(x, w);
+				},
+				limit_bounds: function (container, x0, x1) {
+					return limit_bounds(container, x0, x1);
+				},
+				enable_selection_click: function () {
+					enable_selection_click();
+				},
+				get_selection: function () {
+					return get_selection();
+				},
+				get_chart: function () {
+					return get_chart();
+				},
+				get_time_for_x: function (x) {
+					return get_time_for_x(x);
+				},
+				get_x_for_time: function (t) {
+					return get_x_for_time(t);
+				},
+				get_width: function () {
+					return get_width();
+				},
+				get_height: function () {
+					return get_height();
+				},
+				filter_channels: function (state) {
+					return filter_channels(state);
+				},
+				set_axis_channel: function (channel, left) {
+					return set_axis_channel(channel, left);
+				},
+				draw_events: function (suggestions) {
+					return draw_events(suggestions);
+				},
+				draw_antievents: function () {
+					return draw_antievents();
+				}
+			};
+		}()
+	);
 });

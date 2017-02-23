@@ -81,6 +81,10 @@ $(function () {
 			}
 		};
 
+		var get_position = function(point1, point2, time) {
+			return ((time - point1.time) / (point2.time - point1.time)) * (point2.value - point1.value) + point1.value;
+		};
+
 		var filter_data = function(start, end) {
 			clear();
 			var filteredData = jQuery.extend(true, {}, raw_data);
@@ -92,15 +96,15 @@ $(function () {
 						if(dataItem.time.isAfter(start)) {
 							if(dataItem.time.isBefore(end)) {
 								if(prev && prev.time.isBefore(start)) {
-									filtered.push(data_point(channel, start, ((start - prev.time) / (dataItem.time - prev.time)) * (dataItem.value - prev.value) + prev.value));
+									filtered.push(data_point(channel, start, get_position(prev, dataItem, start)));
 								}
 								filtered.push(data_point(channel, dataItem.time, dataItem.value));
 							} else {
 								if(prev && prev.time.isBefore(end)) {
 									if(prev.time.isBefore(start)) {
-										filtered.push(data_point(channel, start, ((start - prev.time) / (dataItem.time - prev.time)) * (dataItem.value - prev.value) + prev.value));
+										filtered.push(data_point(channel, start, get_position(prev, dataItem, start)));
 									}
-									filtered.push(data_point(channel, end, ((end - prev.time) / (dataItem.time - prev.time)) * (dataItem.value - prev.value) + prev.value));
+									filtered.push(data_point(channel, end, get_position(prev, dataItem, end)));
 								} else {
 									return false;
 								}
@@ -221,6 +225,9 @@ $(function () {
 			},
 			get_datasets: function () {
 				return get_datasets();
+			},
+			get_position: function(point1, point2, time) {
+				return get_position(point1, point2, time);
 			},
 			get_annotations: function () {
 				return get_annotations();

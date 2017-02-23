@@ -726,7 +726,7 @@ $(function () {
 
 						d3.selectAll(".mouse-per-line")
 							.attr("transform", function(d, i) {
-								var xDate = get_time_for_x(mouse[0]);
+								var xDate = moment(xSc.invert(mouse[0]));
 								var index = 0;
 								while(index < d.data.length) {
 									if(d.data[index].time > xDate) {
@@ -740,7 +740,6 @@ $(function () {
 
 								var y_range = get_y_range(d.channel);
 								var ySc = d3.scale.linear().domain([y_range[0], y_range[1]]).range([0, h]);
-
 
 								return "translate(" + mouse[0] + "," + (h - ySc(pos)) +")";
 							});

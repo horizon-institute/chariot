@@ -374,7 +374,7 @@ $(function () {
 					.attr("class", "mouse-per-line");
 
 				mousePerLine.append("circle")
-					.attr("r", 7)
+					.attr("r", 5)
 					.style("stroke", function(d) {
 						return d.colour;
 					})
@@ -383,7 +383,9 @@ $(function () {
 					.style("opacity", "0");
 
 				mousePerLine.append("text")
-					.attr("transform", "translate(10,3)");
+					.attr("transform", "translate(10,3)")
+					.style("font-size", "13px")
+					.attr("fill", "#444");
 
 
 
@@ -735,13 +737,15 @@ $(function () {
 									index++;
 								}
 
-								var pos = fe.datastore.get_position(d.data[index - 1], d.data[index], xDate);
-								d3.select(this).select('text').text(pos.toFixed(2) + d.units);
+								if(index > 0 && index < d.data.length) {
+									var pos = fe.datastore.get_position(d.data[index - 1], d.data[index], xDate);
+									d3.select(this).select('text').text(pos.toFixed(2) + d.units);
 
-								var y_range = get_y_range(d.channel);
-								var ySc = d3.scale.linear().domain([y_range[0], y_range[1]]).range([0, h]);
+									var y_range = get_y_range(d.channel);
+									var ySc = d3.scale.linear().domain([y_range[0], y_range[1]]).range([0, h]);
 
-								return "translate(" + mouse[0] + "," + (h - ySc(pos)) +")";
+									return "translate(" + mouse[0] + "," + (h - ySc(pos)) +")";
+								}
 							});
 					});
 

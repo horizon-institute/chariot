@@ -139,7 +139,7 @@ class DeploymentStartForm(forms.ModelForm):
 
 class DeploymentUpdatePhotoForm(forms.ModelForm):
     class Meta:
-        fields = ['photo', ]
+        fields = ['photo']
         model = Deployment
 
 
@@ -148,6 +148,7 @@ class DeploymentSensorUpdateForm(forms.ModelForm):
     cost = forms.FloatField(required=False)
 
     class Meta:
+        fields = ['location', 'cost']
         model = DeploymentSensor
 
 

@@ -1,7 +1,5 @@
 {% extends 'chariot/base.html' %}
 
-{% load url from future %}
-
 {% block scripts %}
 <script type="text/javascript">
 	var DATA_URL = "{% url 'graphs:data' deployment.id %}";
@@ -14,13 +12,12 @@
 </script>
 <script src="/scripts/moment.min.js"></script>
 <!--  JQUERY -->
-<script src="/scripts/jquery-3.1.1.min.js"></script>
+<script src="/scripts/jquery.min.js"></script>
 <script src="/scripts/jquery-ui.min.js"></script>
 <script src="/scripts/jquery.daterangepicker.min.js"></script>
-<link rel="stylesheet" href="/styles/jquery-ui.min.css">
 <link rel="stylesheet" href="/styles/daterangepicker.min.css">
 <!--- D3 --->
-<script src="/scripts/d3.v3.js"></script>
+<script src="/scripts/d3.min.js"></script>
 <script src="/scripts/d3.time.js"></script>
 <!-- FE scripts and CSS -->
 <script src="/scripts/fe.datastore.js"></script>

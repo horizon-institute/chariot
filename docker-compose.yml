@@ -6,12 +6,11 @@ services:
             - "8086:8086"
 
     db:
-        image: mysql
+        image: postgres:alpine
         environment:
-            MYSQL_ROOT_PASSWORD: chariot
-            MYSQL_DATABASE: chariot
-            MYSQL_USER: chariot
-            MYSQL_PASSWORD: chariot
+            POSTGRES_DB: chariot
+            POSTGRES_USER: chariot
+            POSTGRES_PASSWORD: chariot
 
     app:
         build: src/app
@@ -25,7 +24,7 @@ services:
 
     web:
         restart: always
-        image: nginx
+        image: nginx:alpine
         ports:
             - "80:80"
             - "443:443"

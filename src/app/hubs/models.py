@@ -4,21 +4,20 @@ from django.conf import settings
 from django.db import models
 from django.utils import timezone
 
-from django_extensions.db.models import TimeStampedModel
-
 from django.utils.translation import ugettext_lazy as _
 
 
-class Hub(TimeStampedModel):
+class Hub(models.Model):
     id = models.CharField(_('MAC Address'), primary_key=True, max_length=255)
     name = models.CharField(_('Name'), max_length=255)
     external_network_address = models.GenericIPAddressField(blank=True, null=True)
     network_address = models.GenericIPAddressField(blank=True, null=True)
     online_since = models.DateTimeField(blank=True, null=True)
     last_ping = models.DateTimeField(blank=True, null=True)
+    created = models.DateTimeField(auto_now_add=True)
 
-    def __unicode__(self):
-        return '{name} with MAC address {mac_address}'.format(
+    def __str__(self):
+        return '{name} ({mac_address})'.format(
             name=self.name, mac_address=self.id
         )
 

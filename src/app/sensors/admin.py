@@ -1,5 +1,5 @@
 # encoding:UTF-8
-from models import Channel, Sensor
+from sensors.models import Channel, Sensor
 
 from django.contrib import admin
 
@@ -10,7 +10,7 @@ class SensorAdmin(admin.ModelAdmin):
     ]
     list_display = ('name', 'id')
     search_fields = ('user__username',)
-    ordering = ('name',)
+    ordering = ('id',)
 
 
 admin.site.register(Sensor, SensorAdmin)

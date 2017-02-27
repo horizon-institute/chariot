@@ -9,8 +9,8 @@ class Channel(models.Model):
     name = models.CharField(_('Name'), max_length=256)
     hidden = models.BooleanField(_("Hidden"), default=False)
 
-    def __unicode__(self):
-        return self.name
+    def __str__(self):
+        return u'%s Channel' % self.name
 
 
 class Sensor(models.Model):
@@ -20,9 +20,6 @@ class Sensor(models.Model):
     channels = models.ManyToManyField(Channel)
     cost_channel = models.ForeignKey(Channel, blank=True, null=True, related_name='+')
     default = models.BooleanField(_('Add to New Deployments'), default=False)
-
-    def __unicode__(self):
-        return u'%s (%s)' % (self.name, self.id)
 
     class Meta:
         ordering = ['name']

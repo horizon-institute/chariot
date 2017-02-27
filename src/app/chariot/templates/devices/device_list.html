@@ -1,7 +1,5 @@
 {% extends 'chariot/base.html' %}
 
-{% load url from future %}
-
 {% block title %}
 Devices
 {% endblock %}
@@ -11,7 +9,7 @@ Devices
 	<ul class="mdl-cell mdl-cell--6-col mdl-cell--1-offset-tablet mdl-list">
 		{% for hub in hubs %}
 			<li class="mdl-list__item mdl-list__item--two-line">
-				<div class="mdl-list__item-primary-content {% if not sensor_deployment_details.connection_status.0 %}panel-danger{% else %}panel-default{% endif %}">
+				<div class="mdl-list__item-primary-content">
 					<i class="material-icons mdl-list__item-icon">device_hub</i>
 					{% if 'hub' in hub.name|lower %}
 						<span>{{ hub.name }}</span>
@@ -23,9 +21,7 @@ Devices
 				<div class="mdl-list__item-secondary-content">
 					<span class="mdl-list__item-secondary-info">
 						{{ hub.connection_status.1 }}
-						{% if hub.connection_status.2 %}
-						for {{ hub.connection_status.2 }}
-						{% endif %}
+						{{ hub.connection_status.2|default:'' }}
 		            </span>
 				</div>
 			</li>
@@ -38,7 +34,7 @@ Devices
 	<ul class="mdl-cell mdl-cell--6-col mdl-cell--1-offset-tablet mdl-list">
 		{% for sensor in object_list %}
 		<li class="mdl-list__item mdl-list__item--two-line">
-			<div class="mdl-list__item-primary-content {% if not sensor_deployment_details.connection_status.0 %}panel-danger{% else %}panel-default{% endif %}">
+			<div class="mdl-list__item-primary-content">
 				<i class="material-icons mdl-list__item-icon">router</i>
 				<span>{{ sensor.name|default:"Sensor" }} <span style="color: #888;">({{ sensor.id }})</span></span>
 				<span class="mdl-list__item-sub-title">{{ sensor.channels.all|join:", " }}</span>

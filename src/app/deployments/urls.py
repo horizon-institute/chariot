@@ -1,9 +1,8 @@
-from django.conf.urls import patterns, url
+from django.conf.urls import url
 
 from .views import *
 
-urlpatterns = patterns(
-    '',
+urlpatterns = [
     url(r'^create', DeploymentCreateView.as_view(), name='create'),
     url(r'^(?P<pk>\d+)$', DeploymentUpdateView.as_view(), name='update'),
     url(r'^(?P<pk>\d+)/end$', DeploymentEndView.as_view(), name='end'),
@@ -14,4 +13,4 @@ urlpatterns = patterns(
     url(r'^annotation$', DeploymentAnnotationCreate.as_view(), name='annotation-create'),
     url(r'^annotation/(?P<pk>\d+)$', DeploymentAnnotationUpdate.as_view(), name='annotation-update'),
     url(r'^annotation/(?P<pk>\d+)/delete$', DeploymentAnnotationDelete.as_view(), name='annotation-delete'),
-)
+]

@@ -1,13 +1,11 @@
 {% extends 'chariot/base.html' %}
 
-{% load url from future %}
-
 {% block scripts %}
 	<script>
 	    var fragmentURL = "{% url 'deployments:fragment' 1234 %}";
 	</script>
 
-	<script src="/scripts/jquery-3.1.1.min.js"></script>
+	<script src="/scripts/jquery.min.js"></script>
 	<script src="/scripts/deployment_refresh.js"></script>
 {% endblock %}
 

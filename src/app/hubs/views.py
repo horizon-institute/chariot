@@ -8,7 +8,7 @@ from datetime import datetime
 from django.core.urlresolvers import reverse
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
-from django.utils import simplejson as json
+import json
 from django.views.generic import CreateView
 from rest_framework import status, serializers, authentication
 from rest_framework.authtoken.models import Token
@@ -39,7 +39,7 @@ class DeploymentSensorIDSerializer(serializers.ModelSerializer):
 
 class DeploymentSerializer(serializers.ModelSerializer):
     hub = serializers.PrimaryKeyRelatedField(read_only=True)
-    sensors = DeploymentSensorIDSerializer()
+    sensors = DeploymentSensorIDSerializer(many=True)
 
     class Meta:
         model = Deployment
@@ -75,7 +75,9 @@ def get_token(request, id):
         hub = Hub.objects.get(id=id)
         token = Token.objects.latest('created')
         return HttpResponse(json.dumps({'token': token.key, 'deployment': hub.deployment.pk}), content_type='application/json')
-    except Hub.DoesNotExist, Token.DoesNotExist:
+    except Hub.DoesNotExist:
+        return HttpResponse(status=404)
+    except Token.DoesNotExist:
         return HttpResponse(status=404)
 
 
@@ -114,21 +116,21 @@ class SensorReading(APIView):
 
     def post(self, request):
         reading = {
-            "measurement": request.DATA['channel'],
+            "measurement": request.data['channel'],
             "tags": {
-                "sensor": request.DATA['sensor'],
-                "deployment": long(request.DATA['deployment'])
+                "sensor": request.data['sensor'],
+                "deployment": int(request.data['deployment'])
             },
             "fields": {
-                "value": float(request.DATA['value'])
+                "value": float(request.data['value'])
             }
         }
         logger.info(reading)
-        if 'timestamp' in request.DATA:
-            reading['time'] = request.DATA['timestamp']
+        if 'timestamp' in request.data:
+            reading['time'] = request.data['timestamp']
         if influx.write_points([reading]):
             try:
-                cached = DeploymentDataCache.objects.get(deployment=int(request.DATA['deployment']))
+                cached = DeploymentDataCache.objects.get(deployment=int(request.data['deployment']))
                 cache_time = cached.created
                 if (timezone.now() - cache_time) > timedelta(minutes=20):
                     cached.delete()

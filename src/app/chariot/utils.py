@@ -4,7 +4,7 @@ from logging import getLogger
 from datetime import datetime  # , timedelta
 import re
 
-from django.utils import simplejson as json
+import json
 from django.contrib.auth.models import User
 from django.db.models.fields.files import ImageFieldFile
 from django.db import models

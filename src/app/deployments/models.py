@@ -1,4 +1,6 @@
 # encoding:UTF-8
+import datetime
+
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.db import models
@@ -6,18 +8,17 @@ from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 from chariot.influx import select
 
-from django_extensions.db.models import TimeStampedModel
-
 from hubs.models import Hub
 from sensors.models import Sensor
 from chariot.influx import drop_from
 
 
-class Deployment(TimeStampedModel):
+class Deployment(models.Model):
     client_name = models.CharField(max_length=255)
     address_line_one = models.CharField(max_length=255)
     post_code = models.CharField(max_length=255)
     notes = models.TextField(null=True, blank=True)
+    created = models.DateTimeField(auto_now_add=True)
 
     photo = models.ImageField(_('Header Image'), upload_to='deployment_photos', null=True, blank=True)
 
@@ -26,8 +27,8 @@ class Deployment(TimeStampedModel):
 
     hub = models.OneToOneField(Hub, blank=True, null=True)
 
-    def __unicode__(self):
-        return self.client_name
+    def __str__(self):
+        return '{client} Deployment'.format(client=self.client_name)
 
     def end(self):
         if not self.running:
@@ -65,21 +66,23 @@ class Deployment(TimeStampedModel):
         return 1, 'Details Incomplete'
 
 
-class DeploymentDataCache(TimeStampedModel):
+class DeploymentDataCache(models.Model):
     deployment = models.OneToOneField(Deployment, primary_key=True)
+    created = models.DateTimeField(auto_now_add=True)
     data = models.TextField()
 
 
-class DeploymentAnnotation(TimeStampedModel):
+class DeploymentAnnotation(models.Model):
     text = models.TextField()
     start = models.DateTimeField()
     end = models.DateTimeField()
     layer = models.IntegerField()
     author = models.ForeignKey(User)
     deployment = models.ForeignKey(Deployment)
+    created = models.DateTimeField(auto_now_add=True)
 
 
-class DeploymentSensor(TimeStampedModel):
+class DeploymentSensor(models.Model):
     deployment = models.ForeignKey(Deployment, related_name='sensors')
     sensor = models.ForeignKey(Sensor)
     cost = models.FloatField(default=0)
@@ -90,9 +93,9 @@ class DeploymentSensor(TimeStampedModel):
         verbose_name_plural = "Deployment Sensors"
         unique_together = ("deployment", "sensor")
 
-    def __unicode__(self):
-        return '{sensor} for {deployment}'.format(
-            sensor=self.sensor, deployment=self.deployment
+    def __str__(self):
+        return 'Sensor {sensor} for {deployment}'.format(
+            sensor=self.sensor.name, deployment=self.deployment
         )
 
     @property
@@ -100,9 +103,9 @@ class DeploymentSensor(TimeStampedModel):
         channels = []
         for channel in self.sensor.channels.all():
             try:
-                result = select('LAST').from_table(channel.id)\
-                    .where('deployment').eq(self.deployment.pk)\
-                    .where('sensor').eq(self.sensor.id).fetch_one()
+                result = select('LAST').from_table(channel.id) \
+                    .where('deployment').eq(self.deployment.pk) \
+                    .where('sensor').eq(self.sensor.id).fetch().first()
                 if result:
                     channels.append(channel)
             except Exception as e:
@@ -116,18 +119,18 @@ class DeploymentSensor(TimeStampedModel):
 
         for channel in self.sensor.channels.all():
             try:
-                result = select('LAST').from_table(channel.id)\
-                    .where('deployment').eq(self.deployment.pk)\
-                    .where('sensor').eq(self.sensor.id).fetch_one()
+                result = select('LAST').from_table(channel.id) \
+                    .where('deployment').eq(self.deployment.pk) \
+                    .where('sensor').eq(self.sensor.id).fetch().first()
                 if result:
-                    if result['time'] > latest_reading['time']:
+                    if not latest_reading or result['time'] > latest_reading['time']:
                         latest_reading = {
                             'channel': channel,
                             'result': result,
-                            'time': result['time'],
+                            'time': datetime.datetime.fromtimestamp(result['time']/1000.0),
                             'value': result['last']
                         }
-            except Exception as e:
+            except Exception:
                 pass
 
         return latest_reading
@@ -138,9 +141,9 @@ class DeploymentSensor(TimeStampedModel):
 
         for channel in self.sensor.channels.all():
             try:
-                result = select('LAST').from_table(channel.id)\
-                    .where('deployment').eq(self.deployment.pk)\
-                    .where('sensor').eq(self.sensor.id).fetch_one()
+                result = select('LAST').from_table(channel.id) \
+                    .where('deployment').eq(self.deployment.pk) \
+                    .where('sensor').eq(self.sensor.id).fetch().first()
                 latest_readings.append({
                     'channel': channel,
                     'result': result,

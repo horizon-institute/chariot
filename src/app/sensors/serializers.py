@@ -10,7 +10,7 @@ class ChannelSerializer(serializers.ModelSerializer):
 
 
 class SensorIDSerializer(serializers.ModelSerializer):
-    channels = ChannelSerializer()
+    channels = ChannelSerializer(many=True)
 
     class Meta:
         model = Sensor

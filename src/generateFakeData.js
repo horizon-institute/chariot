@@ -3,11 +3,11 @@ const FormData = require('form-data');
 const fs = require('fs');
 const assert = require('assert');
 
-const requestPause = 100;
+const requestPause = 1000;
 
 const url = 'http://localhost';
 const mac_addresses = ['12:34:56:78:90:01'];
-const sensors = ['7', '23','24','25'];
+const sensors = ['7','23','24','25'];
 const channels = []; // Empty for all channels
 var headers = {};
 

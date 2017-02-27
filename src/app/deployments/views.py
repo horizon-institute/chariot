@@ -105,8 +105,6 @@ class DeploymentAnnotationCreate(LoginRequiredMixin, CreateView):
     model = DeploymentAnnotation
     form_class = DeploymentAnnotationForm
 
-    fields = ['start', 'end', 'layer', 'text', 'deployment']
-
     def form_valid(self, form):
         form.instance.author = self.request.user
         return super(DeploymentAnnotationCreate, self).form_valid(form)

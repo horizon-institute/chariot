@@ -101,7 +101,7 @@ $(function () {
 						return c + ' _' + d.id;
 					})
 					.attr("x", function (d) {
-						return fe.logger.plot.get_x_for_time(moment(d.start));
+						return fe.logger.plot.get_x_for_time(d.start);
 					})
 					.attr("fill", "#000")
 					.style('opacity', 0.4)
@@ -110,8 +110,8 @@ $(function () {
 						return (d.layer - 1) * bar_h;
 					})
 					.attr("width", function (d) {
-						var x0 = fe.logger.plot.get_x_for_time(moment(d.start));
-						var x1 = fe.logger.plot.get_x_for_time(moment(d.end));
+						var x0 = fe.logger.plot.get_x_for_time(d.start);
+						var x1 = fe.logger.plot.get_x_for_time(d.end);
 						return x1 - x0;
 					})
 					.on('click', function (e) {
@@ -134,17 +134,13 @@ $(function () {
 					.attr("y", 0)
 					.attr("height", plot.get_height())
 					.attr("x", function (d) {
-						return fe.logger.plot.get_x_for_time(moment(d.start));
+						return fe.logger.plot.get_x_for_time(d.start);
 					})
 					.attr("width", function (d) {
-						var x0 = fe.logger.plot.get_x_for_time(moment(d.start));
-						var x1 = fe.logger.plot.get_x_for_time(moment(d.end));
+						var x0 = fe.logger.plot.get_x_for_time(d.start);
+						var x1 = fe.logger.plot.get_x_for_time(d.end);
 						return x1 - x0;
-					}).on('click', function (e) {
-					show_annotation_editor(e);
-					d3.event.preventDefault();
-					d3.event.stopPropagation();
-				});
+					});
 			}
 		};
 	}());

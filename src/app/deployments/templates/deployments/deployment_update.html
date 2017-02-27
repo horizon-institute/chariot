@@ -1,11 +1,10 @@
 {% extends 'chariot/base.html' %}
 
-{% load url from future %}
 {% load crispy_forms_tags %}
 {% load humanize %}
 
 {% block scripts %}
-	<script src="/scripts/jquery-3.1.1.min.js"></script>
+	<script src="/scripts/jquery.min.js"></script>
 {% endblock %}
 
 {% block title %}{{ deployment.client_name }} Deployment{% endblock %}

@@ -160,7 +160,7 @@ LOGGING = {
 }
 
 LOGIN_REDIRECT_URL = '/'
-LOGIN_URL = '/accounts/login'
+LOGIN_URL = '/accounts/login/'
 LOGOUT_URL = '/'
 
 REST_FRAMEWORK = {

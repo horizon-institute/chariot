@@ -3,7 +3,7 @@ const FormData = require('form-data');
 const fs = require('fs');
 const assert = require('assert');
 
-const requestPause = 1000;
+const requestPause = 100;
 
 const url = 'http://localhost';
 const mac_addresses = ['12:34:56:78:90:01'];
@@ -96,7 +96,8 @@ function sendData(deployment, sensor, channel) {
 		channel.value = 20;
 	}
 	else {
-	    channel.trend += (Math.random() - Math.random()) / 1000;
+	    channel.trend += (Math.random() - Math.random()) * Math.random() * Math.random() * Math.random() / 100;
+	    channel.trend *= Math.random();
 	    channel.trend = Math.min(0.1, channel.trend);
 		channel.trend = Math.max(-0.1, channel.trend);
 		channel.value += channel.trend;

@@ -27,7 +27,7 @@ $(document).ready(function () {
 			$("#zoomIn").prop("disabled", false);
 			var annotationItem = $('#toggleAnnotations');
 			var annotations = annotationItem.data('show');
-			if(annotations) {
+			if (annotations) {
 				$("#addAnnotation").show();
 			}
 		}
@@ -134,11 +134,9 @@ $(document).ready(function () {
 	}).prop("disabled", true);
 
 	// If an event gets to the body
-	$("body").click(function () {
+	$("#annotations-edit-dialog").click(function () {
 		$("#annotations-edit-dialog").fadeOut();
-	});
-
-	$("#annotations-edit-dialog").children().click(function (e) {
+	}).children().click(function (e) {
 		e.stopPropagation();
 	});
 
@@ -249,7 +247,7 @@ function build_menu(sensors) {
 							value_max = dataItem.value;
 						}
 
-						if(previous != null) {
+						if (previous != null) {
 							var prev_duration = dataItem.time - previous.time;
 							var total_duration = prev_duration + avg_duration;
 
@@ -271,17 +269,17 @@ function build_menu(sensors) {
 								' Avg: ' + value_avg.toFixed(2) + stream.units +
 								'</div>');
 
-						if(device.cost) {
-                            var cost = value_avg * moment.duration(avg_duration).asHours() * device.cost;
-                            if(cost < 100) {
-                                 content.append('<div class="mdl-typography--caption-color-contrast">' +
-                                    ' Cost: ' + cost.toFixed(1) + 'p</div>')
-                            } else {
-                                cost /= 100;
-                                content.append('<div class="mdl-typography--caption-color-contrast">' +
-                                    ' Cost: £' + cost.toFixed(2) + '</div>')
-                            }
-					    }
+						if (device.cost) {
+							var cost = value_avg * moment.duration(avg_duration).asHours() * device.cost;
+							if (cost < 100) {
+								content.append('<div class="mdl-typography--caption-color-contrast">' +
+									' Cost: ' + cost.toFixed(1) + 'p</div>')
+							} else {
+								cost /= 100;
+								content.append('<div class="mdl-typography--caption-color-contrast">' +
+									' Cost: £' + cost.toFixed(2) + '</div>')
+							}
+						}
 					}
 
 

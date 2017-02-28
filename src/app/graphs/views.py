@@ -49,7 +49,7 @@ def generate_data(deploymentID):
                 data = response.list()
                 first_value = True
                 while len(data) > 0:
-                    data = simplify.simplify(data, 1)
+                    data = simplify.simplify(data, 0.1)
                     for value in data:
                         if first_value:
                             first_value = False

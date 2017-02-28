@@ -66,14 +66,22 @@ $(function () {
 					plot.create_selection(x, w, selections, true);
 				}
 				else {
-					// var annotations = fe.datastore.get_annotations();
-					// var time = moment(fe.logger.plot.get_time_for_x(this.mouse_x(instance)));
-					// $.each(annotations, function(id, annotation) {
-					// 	if(time.isBetween(annotation.start, annotation.end)) {
-					// 		show_annotation_editor(annotation);
-					// 		return false;
-					// 	}
-					// });
+					var annotations = fe.datastore.get_annotations();
+					var time = moment(fe.logger.plot.get_time_for_x(this.mouse_x(instance)));
+					$.each(annotations, function (id, annotation) {
+						if (time.isBetween(annotation.start, annotation.end)) {
+							if (annotation.layer == fe.logger.annotation.get_selected_layer()) {
+								show_annotation_editor(annotation);
+								return false;
+							}
+						}
+					});
+					$.each(annotations, function (id, annotation) {
+						if (time.isBetween(annotation.start, annotation.end)) {
+							show_annotation_editor(annotation);
+							return false;
+						}
+					});
 				}
 			}
 		};

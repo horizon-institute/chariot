@@ -5,7 +5,7 @@ from django.views.generic.edit import BaseUpdateView
 
 from chariot.mixins import BackButtonMixin, LoginRequiredMixin
 from .forms import *
-from .models import Deployment, DeploymentDataCache
+from .models import Deployment
 
 import json
 
@@ -81,14 +81,6 @@ class DeploymentSensorView(BackButtonMixin, UpdateView):
             sensor=self.kwargs.get('id', None)
         )
         return self.object
-
-    def form_valid(self, form):
-        try:
-            cached = DeploymentDataCache.objects.get(deployment=self.kwargs.get('pk', None))
-            cached.delete()
-        except DeploymentDataCache.DoesNotExist:
-            pass
-        return super(DeploymentSensorView, self).form_valid(form)
 
     def post(self, request, *args, **kwargs):
         self.object = DeploymentSensor.objects.get(

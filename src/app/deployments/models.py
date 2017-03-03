@@ -66,12 +66,6 @@ class Deployment(models.Model):
         return 1, 'Details Incomplete'
 
 
-class DeploymentDataCache(models.Model):
-    deployment = models.OneToOneField(Deployment, primary_key=True)
-    created = models.DateTimeField(auto_now_add=True)
-    data = models.TextField()
-
-
 class DeploymentAnnotation(models.Model):
     text = models.TextField()
     start = models.DateTimeField()
@@ -80,6 +74,9 @@ class DeploymentAnnotation(models.Model):
     author = models.ForeignKey(User)
     deployment = models.ForeignKey(Deployment)
     created = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name_plural = "Deployment Annotations"
 
 
 class DeploymentSensor(models.Model):

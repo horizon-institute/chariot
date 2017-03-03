@@ -22,7 +22,7 @@ class HubCreateForm(forms.ModelForm):
                 css_class='mdl-button mdl-js-button button_right mdl-button--raised mdl-button--colored')
         )
 
-    def clean_mac_address(self):
+    def clean_id(self):
         mac_address = self.cleaned_data['id'].lower().replace("-", ":")
         if not re.match("[0-9a-f]{2}([:])[0-9a-f]{2}(\\1[0-9a-f]{2}){4}$", mac_address):
             raise ValidationError(mac_address + " is not a valid MAC Address")

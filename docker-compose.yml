@@ -36,7 +36,7 @@ services:
             - app
 
     cert:
-        image: gordonchan/auto-letsencrypt
+        build: src/cert
         links:
             - web
         volumes:
@@ -44,8 +44,6 @@ services:
             - ./cert:/etc/letsencrypt
             - ./src/www:/var/www
         environment:
-            - EMAIL
             - CERTS_PATH=/etc/nginx/certs
             - DOMAINS
-            - CHECK_FREQ=3
-        restart: ${CERT_RESTART}
+            - CHECK_FREQ=10

@@ -24,12 +24,14 @@ def query(deployment, sensor, channel, start=None, end=None):
     return query.fetch()
 
 
-def generate_data(deploymentID):
+def generate_data(deployment_id, sensors=None, channels=None, simplified=True, start=None, end=None):
     try:
         yield '{"sensors":['
-        deployment = Deployment.objects.get(pk=deploymentID)
+        deployment = Deployment.objects.get(pk=deployment_id)
         first_sensor = True
         for sensor in deployment.sensors.all():
+            if sensors and sensor.id not in sensors:
+                continue
             if first_sensor:
                 first_sensor = False
             else:
@@ -43,13 +45,14 @@ def generate_data(deploymentID):
 
             first_channel = True
             for channel in sensor.sensor.channels.all():
-                if channel.hidden:# and not show_hidden:
+                if channels != 'all' and (channel.hidden or (channels and channel.id not in channels)):
                     continue
-                response = query(deployment, sensor.sensor, channel)
+                response = query(deployment, sensor.sensor, channel, start, end)
                 data = response.list()
                 first_value = True
                 while len(data) > 0:
-                    data = simplify.simplify(data, 0.1)
+                    if simplified:
+                        data = simplify.simplify(data, 0.1)
                     for value in data:
                         if first_value:
                             first_value = False
@@ -75,7 +78,7 @@ def generate_data(deploymentID):
             yield ']}'
         yield '],'
         yield '"annotations":['
-        annotations = DeploymentAnnotation.objects.filter(deployment=deploymentID)
+        annotations = DeploymentAnnotation.objects.filter(deployment=deployment_id)
         first_annotation = True
         for annotation in annotations:
             if first_annotation:

@@ -2,9 +2,9 @@
 
 echo "Starting"
 
-while ! timeout 1 bash -c 'cat < /dev/null > /dev/tcp/db/5432' >/dev/null 2>/dev/null; do sleep 0.1; done
+while ! nc -z db 5432; do sleep 3; done
 echo "Database Started"
-while ! timeout 1 bash -c 'cat < /dev/null > /dev/tcp/influx/8086' >/dev/null 2>/dev/null; do sleep 0.1; done
+while ! nc -z influx 8086; do sleep 3; done
 echo "InfluxDB Started"
 
 echo "Creating Database"

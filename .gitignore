@@ -2,7 +2,6 @@
 /cert/
 /.idea/
 /node_modules/
-/npm-debug.log
-error.html
 /.env
+/npm-debug.log
 bower_components/

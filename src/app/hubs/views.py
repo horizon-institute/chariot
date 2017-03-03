@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 from chariot.influx import influx
 from datetime import datetime
 from django.core.urlresolvers import reverse
-from django.http import HttpResponse
+from django.http import HttpResponse, StreamingHttpResponse
 from django.shortcuts import get_object_or_404
 import json
 from django.views.generic import CreateView
@@ -19,7 +19,7 @@ from rest_framework.views import APIView
 from chariot import utils
 from chariot.mixins import LoginRequiredMixin, BackButtonMixin
 from chariot.utils import LOCALE_DATE_FMT
-from deployments.models import Deployment, DeploymentSensor, DeploymentDataCache
+from deployments.models import Deployment, DeploymentSensor
 from graphs.views import generate_data
 from hubs.forms import HubCreateForm
 from hubs.models import Hub
@@ -129,14 +129,6 @@ class SensorReading(APIView):
         if 'timestamp' in request.data:
             reading['time'] = request.data['timestamp']
         if influx.write_points([reading]):
-            try:
-                cached = DeploymentDataCache.objects.get(deployment=int(request.data['deployment']))
-                cache_time = cached.created
-                if (timezone.now() - cache_time) > timedelta(minutes=20):
-                    cached.delete()
-            except DeploymentDataCache.DoesNotExist:
-                pass
-
             return Response(reading, status=status.HTTP_201_CREATED)
         return Response("failed", status=status.HTTP_400_BAD_REQUEST)
 
@@ -157,53 +149,26 @@ class DataView(APIView):
     authentication_classes = (authentication.TokenAuthentication,)
 
     def get(self, request, pk, format=None):
-        out = []
-        deployment = Deployment.objects.get(pk=pk)
+        sensors = None
+        channels = None
+        start = None
+        end = None
 
-        show_hidden = 'channels' in request.GET and request.GET['channels'].lower() == 'all'
-        simplify = 'simplify' not in request.GET or request.GET['simplify'].lower() != 'false'
+        if 'sensors' in request.GET:
+            sensors = request.GET['sensors'].split(",")
+
+        if 'channels' in request.GET:
+            if request.GET['channels'].lower() == 'all':
+                channels = 'all'
+            else:
+                channels = request.GET['channels'].split(",")
+
         if 'start' in request.GET:
             start = datetime.strptime(request.GET['start'], LOCALE_DATE_FMT)
-        else:
-            start = None
 
         if 'end' in request.GET:
             end = datetime.strptime(request.GET['end'], LOCALE_DATE_FMT)
-        else:
-            end = None
 
-        sensor_list = None
-        if 'sensors' in request.GET:
-            sensor_list = request.GET['sensors'].split(",")
+        simplify = 'simplify' not in request.GET or request.GET['simplify'].lower() != 'false'
 
-        channel_list = None
-        show_hidden = False
-        if 'channels' in request.GET:
-            if request.GET['channels'].lower() == 'all':
-                show_hidden = True
-            else:
-                channel_list = request.GET['channels'].split(",")
-
-        for sensor in deployment.sensors.all():
-            if not sensor_list or sensor.sensor.id in sensor_list:
-                sensor_obj = {
-                    'name': sensor.sensor.name,
-                    'location': sensor.location,
-                    'channels': [],
-                    'id': sensor.sensor.id}
-                for channel in sensor.sensor.channels.all():
-                    if (channel_list and channel.name in channel_list) or (not channel_list and (not channel.hidden or show_hidden)):
-                        channel_obj = {
-                            'id': channel.id,
-                            'name': channel.name,
-                            'data': generate_data(deployment, sensor.sensor, channel, simplify, start, end),
-                            'units': channel.units}
-                        sensor_obj['channels'].append(channel_obj)
-
-                if sensor.cost > 0:
-                    sensor_obj['cost'] = sensor.cost
-
-                if sensor_list or len(sensor_obj['channels']) > 0:
-                    out.append(sensor_obj)
-
-        return HttpResponse(json.dumps(out), content_type='application/json')
+        return StreamingHttpResponse(generate_data(pk, sensors, channels, simplify, start, end), content_type="application/json")

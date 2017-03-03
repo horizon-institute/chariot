@@ -56,14 +56,6 @@ class Migration(migrations.Migration):
                 'verbose_name_plural': 'Deployment Sensors',
             },
         ),
-        migrations.CreateModel(
-            name='DeploymentDataCache',
-            fields=[
-                ('deployment', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, primary_key=True, serialize=False, to='deployments.Deployment')),
-                ('created', models.DateTimeField(auto_now_add=True)),
-                ('data', models.TextField()),
-            ],
-        ),
         migrations.AddField(
             model_name='deploymentsensor',
             name='deployment',

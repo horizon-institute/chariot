@@ -406,26 +406,6 @@ $(function () {
 						return xSc(d.end) - xSc(d.start);
 					});
 
-				//var lines = document.getElementsByClassName('line');
-				//
-				// var mousePerLine = mouseG.selectAll('.mouse-per-line')
-				// 	.data(cities)
-				// 	.enter()
-				// 	.append("g")
-				// 	.attr("class", "mouse-per-line");
-				//
-				// mousePerLine.append("circle")
-				// 	.attr("r", 7)
-				// 	.style("stroke", function(d) {
-				// 		return color(d.name);
-				// 	})
-				// 	.style("fill", "none")
-				// 	.style("stroke-width", "1px")
-				// 	.style("opacity", "0");
-				//
-				// mousePerLine.append("text")
-				// 	.attr("transform", "translate(10,3)");
-
 				setup_interaction();
 			};
 
@@ -727,7 +707,10 @@ $(function () {
 							});
 
 						d3.selectAll(".mouse-per-line")
-							.attr("transform", function(d, i) {
+							.attr("transform", function(d) {
+								if(!d.visible) {
+									return "translate(-1000,-1000)";
+								}
 								var xDate = moment(xSc.invert(mouse[0]));
 								var index = 0;
 								while(index < d.data.length) {

@@ -96,10 +96,8 @@ function sendData(deployment, sensor, channel) {
 		channel.value = 20;
 	}
 	else {
+	    channel.trend *= 0.9;
 	    channel.trend += (Math.random() - Math.random()) * Math.random() * Math.random() * Math.random() / 100;
-	    channel.trend *= Math.random();
-	    channel.trend = Math.min(0.1, channel.trend);
-		channel.trend = Math.max(-0.1, channel.trend);
 		channel.value += channel.trend;
 	}
 	var data = new FormData();

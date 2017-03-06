@@ -23,6 +23,7 @@ services:
     web:
         restart: always
         image: nginx:alpine
+        container_name: chariot_web
         ports:
             - "80:80"
             - "443:443"
@@ -40,10 +41,9 @@ services:
         links:
             - web
         volumes:
-            - ./cert/certs:/etc/nginx/certs
+            - /var/run/docker.sock:/tmp/docker.sock
             - ./cert:/etc/letsencrypt
-            - ./src/www:/var/www
         environment:
-            - CERTS_PATH=/etc/nginx/certs
             - DOMAINS
             - CHECK_FREQ=10
+            - SERVER_CONTAINER=chariot_web

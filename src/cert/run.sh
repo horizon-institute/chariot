@@ -15,7 +15,7 @@ check() {
 	certbot renew -n --post-hook "/renewed.sh"
 
 	echo "Checking again in $CHECK_FREQ days"
-	sleep ${CHECK_FREQ}d
+	sleep ${CHECK_FREQ}m
 	check
 }
 
@@ -25,12 +25,7 @@ if [ "${EMAIL}" ] ; then
 	CERTBOT_DOMAINS="-d ${DOMAINS/ / -d }"
 
 	certbot certonly --standalone --agree-tos --renew-by-default --text --email ${EMAIL} ${CERTBOT_DOMAINS}
-	echo "Finished request"
-
-	if [ "$CERTS_PATH" ] ; then
-		echo "Copying certificates to $CERTS_PATH"
-		eval cp /etc/letsencrypt/live/$DOMAINS/* $CERTS_PATH/
-	fi
+	sh ./renewed.sh
 else
 	check
 fi

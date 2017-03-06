@@ -1,6 +1,6 @@
 FROM alpine
 
-RUN apk --update add certbot docker
+RUN apk --update add certbot netcat-openbsd
 
 EXPOSE 80 443
 

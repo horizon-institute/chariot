@@ -8,8 +8,7 @@ then
     if [[ ! ${DOMAINS} = "" ]]
     then
 		read -p "Email address: " EMAIL
-		docker run -v "$(pwd)/cert:/etc/letsencrypt" -v "$(pwd)/src/www:/www" \
-		    -e "EMAIL=${EMAIL}" -e "DOMAINS=${DOMAINS}" chariot_cert
+		docker run -v "$(pwd)/cert:/etc/letsencrypt" -e "EMAIL=${EMAIL}" -e "DOMAINS=${DOMAINS}" chariot_cert
 
 		if [ -r "cert/certs/fullchain.pem" ]
         then

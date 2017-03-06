@@ -1,13 +1,12 @@
 #!/bin/sh
 
-echo "Certificates Renewed"
+echo "Certificates Updated"
 
-if [ "$CERTS_PATH" ] ; then
-	echo "Copying certificates to $CERTS_PATH"
-	eval cp /etc/letsencrypt/live/$DOMAINS/* $CERTS_PATH/
-fi
+echo "Copying certificates to /etc/letsencrypt/certs"
+eval cp /etc/letsencrypt/live/$DOMAINS/* /etc/letsencrypt/certs/
 
 if [ "$SERVER_CONTAINER" ]; then
-	echo "Reloading Nginx configuration on $SERVER_CONTAINER"
-	eval docker kill -s HUP $SERVER_CONTAINER
+	echo "Restarting nginx Configuration on $SERVER_CONTAINER"
+
+	echo -e "POST /containers/$SERVER_CONTAINER/kill?signal=SIGHUP HTTP/1.0\r\n" |nc -U /tmp/docker.sock
 fi

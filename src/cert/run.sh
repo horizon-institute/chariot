@@ -15,7 +15,7 @@ check() {
 	certbot renew -n --post-hook "/renewed.sh"
 
 	echo "Checking again in $CHECK_FREQ days"
-	sleep ${CHECK_FREQ}m
+	sleep ${CHECK_FREQ}d
 	check
 }
 

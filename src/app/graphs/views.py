@@ -21,6 +21,8 @@ def query(deployment, sensor, channel, start=None, end=None):
     if end:
         query = query.where('time').lte(end)
 
+    query = query.limit(5000)
+
     return query.fetch()
 
 

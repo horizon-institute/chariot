@@ -102,7 +102,7 @@ class DeploymentSensor(models.Model):
             try:
                 result = select('LAST').from_table(channel.id) \
                     .where('deployment').eq(self.deployment.pk) \
-                    .where('sensor').eq(self.sensor.id).fetch().first()
+                    .where('sensor').eq(self.sensor.id).first()
                 if result:
                     channels.append(channel)
             except Exception as e:
@@ -118,7 +118,7 @@ class DeploymentSensor(models.Model):
             try:
                 result = select('LAST').from_table(channel.id) \
                     .where('deployment').eq(self.deployment.pk) \
-                    .where('sensor').eq(self.sensor.id).fetch().first()
+                    .where('sensor').eq(self.sensor.id).first()
                 if result:
                     if not latest_reading or result['time'] > latest_reading['time']:
                         latest_reading = {
@@ -140,7 +140,7 @@ class DeploymentSensor(models.Model):
             try:
                 result = select('LAST').from_table(channel.id) \
                     .where('deployment').eq(self.deployment.pk) \
-                    .where('sensor').eq(self.sensor.id).fetch().first()
+                    .where('sensor').eq(self.sensor.id).first()
                 latest_readings.append({
                     'channel': channel,
                     'result': result,

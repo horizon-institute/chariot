@@ -1,3 +1,4 @@
+import re
 from influxdb import InfluxDBClient
 
 host = 'influx'
@@ -38,29 +39,17 @@ class InfluxSelect(InfluxBase):
 
 
 class InfluxFetchable(InfluxBase):
-    def execute(self):
-        return influx.query(query=self.query)
+    def list(self):
+        return list(influx.query(self.query, epoch='ms').get_points())
+
+    def first(self):
+        results = self.list()
+        if results and len(results) > 0:
+            return results[0]
+        return None
 
     def fetch(self):
-        params = {
-            'q': self.query,
-            'db': database,
-            'epoch': 'ms'
-
-        }
-        response = influx.request(
-            url="query",
-            method='GET',
-            params=params,
-            data=None,
-            expected_response_code=200
-        )
-
-        response_json = response.json()
-        results = response_json.get('results', [{}])[0]
-        series = results.get('series', [{}])[0]
-
-        return InfluxResponse(query=self.query, response=series)
+        return InfluxResponse(query=self.query, data=self.list())
 
 
 class InfluxTable(InfluxFetchable):
@@ -89,43 +78,38 @@ class InfluxCondition(InfluxFetchable):
     def where(self, var):
         return InfluxConditional(self.query + " AND " + var)
 
-    def offset(self, offset):
-        return InfluxCondition(self.query + " OFFSET " + str(offset))
+    def limit(self, limit):
+        return InfluxFetchable(self.query + " LIMIT " + str(limit))
 
 
 class InfluxResponse(InfluxBase):
-    response = ""
     offset = 0
     limit = 10000
+    data = []
 
-    def __init__(self, query, response, offset=0):
+    def __init__(self, query, data, offset = 0):
         InfluxBase.__init__(self, query)
-        self.response = response
+        self.data = data
         self.offset = offset
+        match = re.search(' LIMIT :P(\d+)', query)
+        if match:
+            self.limit = int(match.group(1))
 
     def is_partial(self):
-        return self.response.get('partial', False)
+        return len(self.data) == self.limit
 
     def list(self):
-        data = []
-        columns = self.response.get('columns', [])
-        for value in self.response.get('values', []):
-            point = {}
-            for col_index, col_name in enumerate(columns):
-                point[col_name] = value[col_index]
-            data.append(point)
-
-        return data
+        return self.data
 
     def first(self):
-        result = self.list()
-        if result and len(result) > 0:
-            return result[0]
+        if self.data and len(self.data) > 0:
+            return self.data[0]
         return None
 
     def next(self):
-        offset_query = InfluxFetchable(self.query + "LIMIT " + str(self.limit) + " OFFSET " + str(self.offset + self.limit))
+        new_offset = self.offset + self.limit
+        offset_query = InfluxFetchable(self.query + " OFFSET " + str(new_offset))
         response = offset_query.fetch()
-        response.offset = self.offset + self.limit
+        response.offset = new_offset
         response.query = self.query
         return response

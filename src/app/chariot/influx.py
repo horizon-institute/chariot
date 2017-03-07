@@ -91,7 +91,7 @@ class InfluxResponse(InfluxBase):
         InfluxBase.__init__(self, query)
         self.data = data
         self.offset = offset
-        match = re.search(' LIMIT :P(\d+)', query)
+        match = re.search(' LIMIT (\d+)', query)
         if match:
             self.limit = int(match.group(1))
 

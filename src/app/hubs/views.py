@@ -115,11 +115,14 @@ class SensorReading(APIView):
     authentication_classes = (authentication.TokenAuthentication,)
 
     def post(self, request):
+        hub_mac_address = utils.decode_mac_address(request.data['hub'])
+        hub = Hub.objects.get(id=hub_mac_address)
+
         reading = {
             "measurement": request.data['channel'],
             "tags": {
                 "sensor": request.data['sensor'],
-                "deployment": int(request.data['deployment'])
+                "deployment": hub.deployment.pk
             },
             "fields": {
                 "value": float(request.data['value'])

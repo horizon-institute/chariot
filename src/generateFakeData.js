@@ -101,7 +101,7 @@ function sendData(deployment, sensor, channel) {
 		channel.value += channel.trend;
 	}
 	var data = new FormData();
-	data.append('deployment', deployment.id);
+	data.append('hub', deployment.hub);
 	data.append('sensor', sensor.id);
 	data.append('channel', channel.id);
 	data.append('value', channel.value);

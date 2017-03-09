@@ -7,14 +7,14 @@ from django.http import StreamingHttpResponse
 from django.views.generic import DetailView
 
 from chariot import utils
-from chariot.influx import select_from
+from chariot.influx import select
 from chariot.mixins import BackButtonMixin, LoginRequiredMixin
 from deployments.models import Deployment, DeploymentAnnotation
 from graphs import simplify
 
 
 def query(deployment, sensor, channel, start=None, end=None):
-    query = select_from(channel.id).where('deployment').eq(deployment.pk).where('sensor').eq(sensor.id)
+    query = select("MOVING_AVERAGE", 2).from_table(channel.id).where('deployment').eq(deployment.pk).where('sensor').eq(sensor.id)
     if start:
         query = query.where('time').gte(start)
 
@@ -69,7 +69,7 @@ def generate_data(deployment_id, sensors=None, channels=None, simplified=True, s
                         else:
                             yield ','
                         yield '{"time":' + str(value['time']) + ','
-                        yield '"value":' + str(value['value']) + '}'
+                        yield '"value":' + str(value['moving_average']) + '}'
                     if response.is_partial():
                         response = response.next()
                         data = response.list()

@@ -11,7 +11,9 @@ influx = InfluxDBClient(host, port, user, password, database)
 influx.create_database(database)
 
 
-def select(func):
+def select(func, value=None):
+    if value:
+        return InfluxSelect("SELECT " + func + "(value," + str(value) + ")")
     return InfluxSelect("SELECT " + func + "(value)")
 
 

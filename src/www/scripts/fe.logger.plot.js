@@ -327,8 +327,6 @@ $(function () {
 				var data_sets = fe.datastore.get_datasets();
 
 				$.each(data_sets, function (index, data_set) {
-					// var y_min = get_y_min(data_set.channel);
-					// var y_max = get_y_max(data_set.channel);
 					var y_range = get_y_range(data_set.channel);
 					var ySc = d3.scale.linear().domain([y_range[0], y_range[1]]).range([0, h]);
 					var d3line = d3.svg.line()
@@ -375,7 +373,7 @@ $(function () {
 
 				mousePerLine.append("circle")
 					.attr("r", 5)
-					.style("stroke", function(d) {
+					.style("stroke", function (d) {
 						return d.colour;
 					})
 					.style("fill", "none")
@@ -386,7 +384,6 @@ $(function () {
 					.attr("transform", "translate(10,3)")
 					.style("font-size", "13px")
 					.attr("fill", "#444");
-
 
 
 				// the .bgs are used for listening to drag events
@@ -707,27 +704,27 @@ $(function () {
 							});
 
 						d3.selectAll(".mouse-per-line")
-							.attr("transform", function(d) {
-								if(!d.visible) {
+							.attr("transform", function (d) {
+								if (!d.visible) {
 									return "translate(-1000,-1000)";
 								}
 								var xDate = moment(xSc.invert(mouse[0]));
 								var index = 0;
-								while(index < d.data.length) {
-									if(d.data[index].time > xDate) {
+								while (index < d.data.length) {
+									if (d.data[index].time > xDate) {
 										break;
 									}
 									index++;
 								}
 
-								if(index > 0 && index < d.data.length) {
+								if (index > 0 && index < d.data.length) {
 									var pos = fe.datastore.get_position(d.data[index - 1], d.data[index], xDate);
 									d3.select(this).select('text').text(pos.toFixed(2) + d.units);
 
 									var y_range = get_y_range(d.channel);
 									var ySc = d3.scale.linear().domain([y_range[0], y_range[1]]).range([0, h]);
 
-									return "translate(" + mouse[0] + "," + (h - ySc(pos)) +")";
+									return "translate(" + mouse[0] + "," + (h - ySc(pos)) + ")";
 								}
 								return "translate(-1000,-1000)";
 							});

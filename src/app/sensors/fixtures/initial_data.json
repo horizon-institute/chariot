@@ -20,7 +20,7 @@
     "model": "sensors.channel",
     "fields": {
       "name": "Electricity",
-      "units": "kWh"
+      "units": "W"
     }
   },
   {

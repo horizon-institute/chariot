@@ -270,7 +270,7 @@ function build_menu(sensors) {
 								'</div>');
 
 						if (device.cost) {
-							var cost = value_avg * moment.duration(avg_duration).asHours() * device.cost;
+							var cost = value_avg * moment.duration(avg_duration).asHours() * device.cost / 1000;
 							if (cost < 100) {
 								content.append('<div class="mdl-typography--caption-color-contrast">' +
 									' Cost: ' + cost.toFixed(1) + 'p</div>')

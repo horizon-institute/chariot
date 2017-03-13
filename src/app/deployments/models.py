@@ -22,8 +22,8 @@ class Deployment(models.Model):
 
     photo = models.ImageField(_('Header Image'), upload_to='deployment_photos', null=True, blank=True)
 
-    start_date = models.DateTimeField(null=True)
-    end_date = models.DateTimeField(null=True)
+    start_date = models.DateTimeField(null=True, blank=True)
+    end_date = models.DateTimeField(null=True, blank=True)
 
     hub = models.OneToOneField(Hub, blank=True, null=True)
 

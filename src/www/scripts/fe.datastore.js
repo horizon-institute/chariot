@@ -3,7 +3,6 @@ if (!fe) {
 	fe = {};
 }
 
-
 $(function () {
 	'use strict';
 	if (!fe) {

@@ -32,7 +32,7 @@ def generate_data(deployment_id, sensors=None, channels=None, simplified=True, s
         deployment = Deployment.objects.get(pk=deployment_id)
         first_sensor = True
         for sensor in deployment.sensors.all():
-            if sensors and sensor.id not in sensors:
+            if sensors and sensor.sensor.id not in sensors:
                 continue
             if first_sensor:
                 first_sensor = False
@@ -74,8 +74,10 @@ def generate_data(deployment_id, sensors=None, channels=None, simplified=True, s
                         response = response.next()
                         data = response.list()
                     else:
-                        data = []
-                        yield ']}'
+                        break
+
+                if not first_value:
+                    yield ']}'
 
             yield ']}'
         yield '],'

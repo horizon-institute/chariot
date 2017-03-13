@@ -1,21 +1,14 @@
-## Running
+# What is Chariot?
+Chariot is a web app designed to store and visualise data from environmental sensors. Chariot enables monitoring of domestic environmental conditions of one or more properties. Chariot is optimised to work with the temperature/humidity/electricity sensors from [OpenEnergyMonitor] (https://openenergymonitor.org/emon/hardware). 
 
-First, [install docker compose](https://docs.docker.com/compose/install/).
-Then, in the chariot directory run:
+We have attempted to make Chariot easy to install for interested parties who wish to use Chariot for their own monitoring purposes in accordance with [the license](https://github.com/horizon-institute/chariot/blob/master/LICENSE).
 
-	./start.sh
+# Install Chariot
+These pages document how to set up Chariot in three steps. 
 
-This script will ask if you want any domains on https, and will get certificates for them before starting up the server.
-It will take some time to start up first time. But, when it is finished CharIoT will be running.
+1. [Set up the web server](https://github.com/horizon-institute/chariot/wiki/Server-Setup).
+2. [Configure the emon sensors and hub](https://github.com/horizon-institute/chariot/wiki/Hub-Setup). 
+3. [Set up a deployment](https://github.com/horizon-institute/chariot/wiki/Deployment-setup).
 
-The first time you open CharIoT in a browser, it will ask you to create an admin user for the system.
-
-## Testing
-
-Install [node.js](https://nodejs.org/en/download/package-manager/). To setup the test scripts, run:
-
-	npm install
-	
-Then to run the script use:
-
-	npm run fakeData
+# Developers API
+(BETA). Once the Chariot instance is up and running, developers can retrieve data from it using this [simple API](https://github.com/horizon-institute/chariot/wiki/API). 

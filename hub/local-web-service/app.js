@@ -9,14 +9,6 @@ var routes = require('./routes/index');
 var app = express();
 
 function onError(error) {
-  if (error.syscall !== 'listen') {
-    throw error;
-  }
-
-  var bind = typeof port === 'string'
-    ? 'Pipe ' + port
-    : 'Port ' + port;
-
   switch (error.code) {
     case 'EACCES':
       console.error(bind + ' requires elevated privileges');
@@ -34,20 +26,6 @@ function onError(error) {
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use('/', routes);
-
-app.use(function(req, res, next) {
-  var err = new Error('Not Found');
-  err.status = 404;
-  next(err);
-});
-
-app.use(function(err, req, res, next) {
-  res.status(err.status || 500);
-  res.render('error', {
-    message: err.message,
-    error: {}
-  });
-});
 
 var server = http.createServer(app);
 server.on('error', onError);

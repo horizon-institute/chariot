@@ -10,7 +10,7 @@ var token = 's';
 
 var requestPause = 1000;
 
-var url = 'https://web.chariot.org.uk';
+var url = 'http://34.251.188.176';
 var local_mac = '00:00:00:00:00:00'; // 
 var tokenUrl = url + "/api/hub/" +  local_mac + "/token";
 var currentData;
@@ -186,6 +186,7 @@ if(array[0][1] == 26) {
 }
 
 router.post('/input/bulk.json', function(req, res, next) {
+	console.log("foo");
 	this.currentData = JSON.parse(req.body.data);
 	updateToken();
 	res.sendStatus(200);

@@ -51,7 +51,7 @@ class InfluxFetchable(InfluxBase):
         return None
 
     def fetch(self):
-        return InfluxResponse(query=self.query, data=self.list())
+        return InfluxResponse(query=self.query)
 
 
 class InfluxTable(InfluxFetchable):
@@ -89,19 +89,19 @@ class InfluxResponse(InfluxBase):
     limit = 10000
     data = []
 
-    def __init__(self, query, data, offset = 0):
+    def __init__(self, query):
         InfluxBase.__init__(self, query)
-        self.data = data
-        self.offset = offset
         match = re.search(' LIMIT (\d+)', query)
         if match:
             self.limit = int(match.group(1))
+        self.offset = -self.limit
+        self.next()
 
     def is_partial(self):
         return len(self.data) == self.limit
 
-    def list(self):
-        return self.data
+    def has_data(self):
+        return len(self.data) > 0
 
     def first(self):
         if self.data and len(self.data) > 0:
@@ -109,9 +109,6 @@ class InfluxResponse(InfluxBase):
         return None
 
     def next(self):
-        new_offset = self.offset + self.limit
-        offset_query = InfluxFetchable(self.query + " OFFSET " + str(new_offset))
-        response = offset_query.fetch()
-        response.offset = new_offset
-        response.query = self.query
-        return response
+        self.offset += self.limit
+        offset_query = self.query + " OFFSET " + str(self.offset)
+        self.data = list(influx.query(offset_query, epoch='ms').get_points())

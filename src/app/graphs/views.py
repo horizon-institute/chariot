@@ -7,21 +7,21 @@ from django.http import StreamingHttpResponse
 from django.views.generic import DetailView
 
 from chariot import utils
-from chariot.influx import select
+from chariot.influx import select_from
 from chariot.mixins import BackButtonMixin, LoginRequiredMixin
 from deployments.models import Deployment, DeploymentAnnotation
 from graphs import simplify
 
 
 def query(deployment, sensor, channel, start=None, end=None):
-    query = select("MOVING_AVERAGE", 2).from_table(channel.id).where('deployment').eq(deployment.pk).where('sensor').eq(sensor.id)
+    query = select_from(channel.id).where('deployment').eq(deployment.pk).where('sensor').eq(sensor.id)
     if start:
         query = query.where('time').gte(start)
 
     if end:
         query = query.where('time').lte(end)
 
-    query = query.limit(10000)
+    query = query.limit(5000)
 
     return query.fetch()
 
@@ -50,11 +50,13 @@ def generate_data(deployment_id, sensors=None, channels=None, simplified=True, s
                 if channels != 'all' and (channel.hidden or (channels and channel.id not in channels)):
                     continue
                 response = query(deployment, sensor.sensor, channel, start, end)
-                data = response.list()
                 first_value = True
-                while len(data) > 0:
+                timestamp = 0
+                while response.has_data():
                     if simplified:
-                        data = simplify.simplify(data, 0.1)
+                        data = simplify.simplify(response.data, 0.2)
+                    else:
+                        data = response.data
                     for value in data:
                         if first_value:
                             first_value = False
@@ -69,10 +71,14 @@ def generate_data(deployment_id, sensors=None, channels=None, simplified=True, s
                         else:
                             yield ','
                         yield '{"time":' + str(value['time']) + ','
-                        yield '"value":' + str(value['moving_average']) + '}'
+                        yield '"value":' + str(value['value']) + '}'
+                        if value['time'] > timestamp:
+                            timestamp = value['time']
+                        elif value['time'] < timestamp:
+                            yield response.query + " OFFSET  " + str(response.offset)
+
                     if response.is_partial():
-                        response = response.next()
-                        data = response.list()
+                        response.next()
                     else:
                         break
 

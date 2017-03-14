@@ -7,6 +7,7 @@
     "start": "./start.sh",
     "restart": "docker-compose restart",
     "stop": "docker-compose stop",
+    "upload": "node src/uploadData.js",
     "dockerclean": "docker kill $(docker ps -a -q) && docker rm $(docker ps -a -q) && docker rmi -f $(docker images -q)",
     "fakeData": "node src/generateFakeData.js"
   },
@@ -14,6 +15,7 @@
   "license": "MIT",
   "dependencies": {
     "form-data": "^2.1.2",
+    "line-reader": "^0.4.0",
     "moment": "^2.16.0",
     "node-fetch": "^1.6.3"
   }

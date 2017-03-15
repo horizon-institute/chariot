@@ -624,6 +624,7 @@ $(function () {
 
 				// Select ones to show
 				$.each(selection, function (index, value) {
+					console.log(index + "," + value);
 					data_sets[value].selected = true;
 				});
 				d3.selectAll('path.linechart').classed("filtered", function (d, i) {
@@ -710,6 +711,15 @@ $(function () {
 								}
 								var xDate = moment(xSc.invert(mouse[0]));
 								var index = 0;
+								// Quicker scan through
+								var interval = 100;
+								while ((index + interval) < d.data.length) {
+									if (d.data[index + interval].time > xDate) {
+										break;
+									}
+									index += interval;
+								}
+
 								while (index < d.data.length) {
 									if (d.data[index].time > xDate) {
 										break;

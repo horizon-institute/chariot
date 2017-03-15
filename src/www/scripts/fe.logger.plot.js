@@ -190,24 +190,21 @@ $(function () {
 							return xSc(d);
 						})
 						.attr("y", h + 2 + 15)
-						.attr("text-anchor", "middle")
-						.text(function (d) {
-							return moment(d).format("H:mm");
-						});
+						.attr("text-anchor", "middle");
 
-					// draw a new row of horizontal axis labels
-					chart.selectAll(".xRule2")
-						.data(xSc.ticks(d3.time.days))
-						.enter().append("text")
-						.attr("class", "xRule2")
-						.attr("x", function (d) {
-							return xSc(d);
-						})
-						.attr("y", h + 16 + 15)
-						.attr("text-anchor", "middle")
-						.text(function (d) {
-							return moment(d).format("ddd Do");
-						});
+					// // draw a new row of horizontal axis labels
+					// chart.selectAll(".xRule2")
+					// 	.data(xSc.ticks(d3.time.days))
+					// 	.enter().append("text")
+					// 	.attr("class", "xRule2")
+					// 	.attr("x", function (d) {
+					// 		return xSc(d);
+					// 	})
+					// 	.attr("y", h + 16 + 15)
+					// 	.attr("text-anchor", "middle")
+					// 	.text(function (d) {
+					// 		return moment(d).format("ddd Do");
+					// 	});
 
 					// draw horizontal axis ticks
 					chart.selectAll(".xTicks")

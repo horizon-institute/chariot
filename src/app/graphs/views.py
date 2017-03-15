@@ -54,10 +54,9 @@ def generate_data(deployment_id, sensors=None, channels=None, simplified=True, s
                     continue
                 response = query(deployment, sensor.sensor, channel, start, end)
                 first_value = True
-                timestamp = 0
                 while response.has_data():
                     if simplified:
-                        data = simplify.simplify(response.data, 0.2)
+                        data = simplify.simplify(response.data, 0.3)
                     else:
                         data = response.data
                     for value in data:

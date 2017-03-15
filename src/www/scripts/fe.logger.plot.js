@@ -254,7 +254,7 @@ $(function () {
 						.attr("dy", 5)
 						.attr("text-anchor", "end")
 						.text(function (d) {
-							return ySc_l.tickFormat(10)(d) + channel_l.units;
+							return ySc_l.tickFormat(10, "s")(d) + channel_l.units;
 						});
 				}
 				//// Right axis
@@ -291,7 +291,7 @@ $(function () {
 							.attr("dy", 5)
 							.attr("text-anchor", "start")
 							.text(function (d) {
-								return ySc_r.tickFormat(10)(d) + channel_r.units;
+								return ySc_r.tickFormat(10, "s")(d) + channel_r.units;
 							});
 					}
 				}

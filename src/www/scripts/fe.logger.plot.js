@@ -710,25 +710,27 @@ $(function () {
 									return "translate(-1000,-1000)";
 								}
 								var xDate = moment(xSc.invert(mouse[0]));
-								var index = 0;
-								// Quicker scan through
-								var interval = 1000;
-								while ((index + interval) < d.data.length) {
-									if (d.data[index + interval].time > xDate) {
-										break;
+								var maxIndex = d.data.length - 1;
+								if(d.data[0].time < xDate && d.data[maxIndex].time > xDate) {
+									var index = 0;
+									while (index != maxIndex) {
+										var currentIndex = (index + maxIndex) / 2 | 0;
+										if(d.data[currentIndex].time > xDate) {
+											maxIndex = currentIndex;
+											if(d.data[currentIndex - 1].time <= xDate){
+												index = currentIndex - 1;
+												break;
+											}
+										} else {
+											index = currentIndex;
+											if(d.data[currentIndex + 1].time > xDate) {
+												maxIndex = currentIndex + 1;
+												break;
+											}
+										}
 									}
-									index += interval;
-								}
 
-								while (index < d.data.length) {
-									if (d.data[index].time > xDate) {
-										break;
-									}
-									index++;
-								}
-
-								if (index > 0 && index < d.data.length) {
-									var pos = fe.datastore.get_position(d.data[index - 1], d.data[index], xDate);
+									var pos = fe.datastore.get_position(d.data[index], d.data[maxIndex], xDate);
 									d3.select(this).select('text').text(pos.toFixed(2) + d.units);
 
 									var y_range = get_y_range(d.channel);
@@ -736,6 +738,7 @@ $(function () {
 
 									return "translate(" + mouse[0] + "," + (h - ySc(pos)) + ")";
 								}
+
 								return "translate(-1000,-1000)";
 							});
 					});

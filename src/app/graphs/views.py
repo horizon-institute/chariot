@@ -7,21 +7,24 @@ from django.http import StreamingHttpResponse
 from django.views.generic import DetailView
 
 from chariot import utils
-from chariot.influx import select_from
+from chariot.influx import select
 from chariot.mixins import BackButtonMixin, LoginRequiredMixin
 from deployments.models import Deployment, DeploymentAnnotation
 from graphs import simplify
 
 
 def query(deployment, sensor, channel, start=None, end=None):
-    query = select_from(channel.id).where('deployment').eq(deployment.pk).where('sensor').eq(sensor.id)
+    query = select("MEAN").from_table(channel.id).where('deployment').eq(deployment.pk).where('sensor').eq(sensor.id)
     if start:
         query = query.where('time').gte(start)
 
     if end:
         query = query.where('time').lte(end)
 
-    query = query.limit(10000)
+    if not start and not end:
+        query = query.where('time').lte("now()")
+
+    query = query.group_by_time("2m").fill_none().limit(10000)
 
     return query.fetch()
 

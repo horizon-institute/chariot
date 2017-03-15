@@ -264,18 +264,18 @@ function build_menu(sensors) {
 						.append('<div>' + (device.location || device.name || 'Sensor') + '</div>');
 					if (value_min != null && value_max != null) {
 						content.append('<div class="mdl-typography--caption-color-contrast">' +
-							value_min.toFixed(2) + stream.units + ' – ' +
-							value_max.toFixed(2) + stream.units +
+							Number(value_min.toFixed(1)) + stream.units + ' – ' +
+							Number(value_max.toFixed(1)) + stream.units +
 							'</div>')
 							.append('<div class="mdl-typography--caption-color-contrast">' +
-								' Avg: ' + value_avg.toFixed(2) + stream.units +
+								' Avg: ' + Number(value_avg.toFixed(1)) + stream.units +
 								'</div>');
 
 						if (device.cost) {
 							var cost = value_avg * moment.duration(avg_duration).asHours() * device.cost / 1000;
 							if (cost < 100) {
 								content.append('<div class="mdl-typography--caption-color-contrast">' +
-									' Cost: ' + cost.toFixed(1) + 'p</div>')
+									' Cost: ' + Number(cost.toFixed(1)) + 'p</div>')
 							} else {
 								cost /= 100;
 								content.append('<div class="mdl-typography--caption-color-contrast">' +

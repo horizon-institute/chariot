@@ -21,7 +21,7 @@ def query(deployment, sensor, channel, start=None, end=None):
     if end:
         query = query.where('time').lte(end)
 
-    query = query.limit(5000)
+    query = query.limit(10000)
 
     return query.fetch()
 
@@ -72,10 +72,6 @@ def generate_data(deployment_id, sensors=None, channels=None, simplified=True, s
                             yield ','
                         yield '{"time":' + str(value['time']) + ','
                         yield '"value":' + str(value['value']) + '}'
-                        if value['time'] > timestamp:
-                            timestamp = value['time']
-                        elif value['time'] < timestamp:
-                            yield response.query + " OFFSET  " + str(response.offset)
 
                     if response.is_partial():
                         response.next()

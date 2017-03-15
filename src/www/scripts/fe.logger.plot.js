@@ -712,7 +712,7 @@ $(function () {
 								var xDate = moment(xSc.invert(mouse[0]));
 								var index = 0;
 								// Quicker scan through
-								var interval = 100;
+								var interval = 1000;
 								while ((index + interval) < d.data.length) {
 									if (d.data[index + interval].time > xDate) {
 										break;

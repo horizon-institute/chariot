@@ -35,7 +35,7 @@
                     </label>
                     <div>
                     {% if 'value' in reading %}
-                        {{ reading.value|floatformat:2 }}{{ reading.channel.units }}
+                        {{ reading.value|floatformat }}{{ reading.channel.units }}
                     {% else %}
                         No data
                     {% endif %}

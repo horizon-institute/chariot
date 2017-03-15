@@ -74,7 +74,7 @@
 							</div>
 							{% if reading.channel == deployment_sensor.sensor.cost_channel %}
 								<div class="mdl-typography--caption-force-preferred-font-color-contrast">
-									{{ reading.channel.name }} Cost: {{ deployment_sensor.cost }}p
+									{{ reading.channel.name }} Cost: {{ deployment_sensor.cost|floatformat }}p
 								</div>
 							{% endif %}
 						{% endif %}

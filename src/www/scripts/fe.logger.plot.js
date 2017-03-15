@@ -191,9 +191,7 @@ $(function () {
 						})
 						.attr("y", h + 2 + 15)
 						.attr("text-anchor", "middle")
-						.text(function (d) {
-							return xSc.tickFormat(10)(d);
-						});
+						.text(xSc.tickFormat(10));
 
 					// draw horizontal axis ticks
 					chart.selectAll(".xTicks")
@@ -255,14 +253,9 @@ $(function () {
 						})
 						.attr("dy", 5)
 						.attr("text-anchor", "end")
-						.text(fmt);
-
-					chart.append("text")
-						.attr("class", "yLabel-l")
-						.attr("x", 0)
-						.attr("y", -10)
-						.attr("text-anchor", "middle")
-						.text(channel_l.units);
+						.text(function (d) {
+							return ySc_l.tickFormat(10)(d) + channel_l.units;
+						});
 				}
 				//// Right axis
 
@@ -297,14 +290,9 @@ $(function () {
 							})
 							.attr("dy", 5)
 							.attr("text-anchor", "start")
-							.text(fmt);
-
-						chart.append("text")
-							.attr("class", "yLabel-r")
-							.attr("x", w)
-							.attr("y", -10)
-							.attr("text-anchor", "middle")
-							.text(channel_r.units);
+							.text(function (d) {
+								return ySc_r.tickFormat(10)(d) + channel_r.units;
+							});
 					}
 				}
 			};

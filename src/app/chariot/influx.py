@@ -83,6 +83,15 @@ class InfluxCondition(InfluxFetchable):
     def limit(self, limit):
         return InfluxFetchable(self.query + " LIMIT " + str(limit))
 
+    def group_by_time(self, interval):
+        return InfluxCondition(self.query + " GROUP BY time(" + interval + ")")
+
+    def fill(self, fill):
+        return InfluxCondition(self.query + " fill(" + fill + ")")
+
+    def fill_none(self):
+        return self.fill("none")
+
 
 class InfluxResponse(InfluxBase):
     offset = 0

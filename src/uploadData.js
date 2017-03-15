@@ -7,7 +7,7 @@ const url = "http://localhost:8086";
 const batches = 5000;
 var batch = "";
 var index = 0;
-var deployment = 1;
+var deployment = 4;
 
 lineReader.eachLine('data.txt', function(line, last, cb) {
 	if (!line.startsWith('name\ttimestamp')) {

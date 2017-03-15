@@ -75,6 +75,9 @@ class InfluxConditional(InfluxBase):
     def lte(self, value):
         return InfluxCondition(self.query + "<='" + str(value) + "'")
 
+    def lte_now(self):
+        return InfluxCondition(self.query + "<= now()")
+
 
 class InfluxCondition(InfluxFetchable):
     def where(self, var):

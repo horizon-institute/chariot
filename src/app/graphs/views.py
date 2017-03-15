@@ -22,7 +22,7 @@ def query(deployment, sensor, channel, start=None, end=None):
         query = query.where('time').lte(end)
 
     if not start and not end:
-        query = query.where('time').lte("now()")
+        query = query.where('time').lte_now()
 
     query = query.group_by_time("2m").fill_none().limit(10000)
 

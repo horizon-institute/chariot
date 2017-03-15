@@ -123,8 +123,10 @@ $(document).ready(function () {
 				endDate: endDate
 			});
 			$("#zoomOut").prop("disabled", false);
-			update_date_range(moment(fe.logger.plot.get_time_for_x(selection.x)), moment(fe.logger.plot.get_time_for_x(selection.x + selection.w)));
+			var start = moment(fe.logger.plot.get_time_for_x(selection.x));
+			var end = moment(fe.logger.plot.get_time_for_x(selection.x + selection.w));
 			fe.logger.plot.clear_selection();
+			update_date_range(start, end);
 		}
 	}).prop("disabled", true);
 	$("#zoomOut").click(function () {

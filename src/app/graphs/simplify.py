@@ -3,7 +3,7 @@ def getSquareDistance(p1, p2):
     Square distance between two points
     """
     dx = p1['time'] - p2['time']
-    dy = p1['value'] - p2['value']
+    dy = p1['mean'] - p2['mean']
 
     return dx * dx + dy * dy
 
@@ -13,23 +13,23 @@ def getSquareSegmentDistance(p, p1, p2):
     Square distance between point and a segment
     """
     x = p1['time']
-    y = p1['value']
+    y = p1['mean']
 
     dx = p2['time'] - x
-    dy = p2['value'] - y
+    dy = p2['mean'] - y
 
     if dx != 0 or dy != 0:
-        t = ((p['time'] - x) * dx + (p['value'] - y) * dy) / (dx * dx + dy * dy)
+        t = ((p['time'] - x) * dx + (p['mean'] - y) * dy) / (dx * dx + dy * dy)
 
         if t > 1:
             x = p2['time']
-            y = p2['value']
+            y = p2['mean']
         elif t > 0:
             x += dx * t
             y += dy * t
 
     dx = p['time'] - x
-    dy = p['value'] - y
+    dy = p['mean'] - y
 
     return dx * dx + dy * dy
 

@@ -45,16 +45,14 @@ $(function () {
 				else if (dragging) {
 					plot.resize_selection(bounds.x, bounds.w);
 				}
-				plot.get_selection().dragX = bounds.x;
-				plot.get_selection().dragW = bounds.w;
 			},
 
 			drag_end: function (instance) {
 				// If width is too small, bail.
 				if (dragging) {
 					var plot = fe.logger.plot;
-					var x = plot.get_selection().dragX;
-					var w = plot.get_selection().dragW;
+					var x = plot.get_selection().x;
+					var w = plot.get_selection().w;
 
 					if (Math.abs(w) <= 10) {
 						plot.clear_selection(true);
@@ -68,20 +66,24 @@ $(function () {
 				else {
 					var annotations = fe.datastore.get_annotations();
 					var time = moment(fe.logger.plot.get_time_for_x(this.mouse_x(instance)));
+					var found = false;
 					$.each(annotations, function (id, annotation) {
 						if (time.isBetween(annotation.start, annotation.end)) {
-							if (annotation.layer == fe.logger.annotation.get_selected_layer()) {
+							if (annotation.layer === fe.logger.annotation.get_selected_layer().ref) {
 								show_annotation_editor(annotation);
+								found = true;
 								return false;
 							}
 						}
 					});
-					$.each(annotations, function (id, annotation) {
-						if (time.isBetween(annotation.start, annotation.end)) {
-							show_annotation_editor(annotation);
-							return false;
-						}
-					});
+					if(!found) {
+						$.each(annotations, function (id, annotation) {
+							if (time.isBetween(annotation.start, annotation.end)) {
+								show_annotation_editor(annotation);
+								return false;
+							}
+						});
+					}
 				}
 			}
 		};

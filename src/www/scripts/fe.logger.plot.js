@@ -490,8 +490,10 @@ $(function () {
 			};
 
 			var resize_selection = function (x, w) {
-				var t0 = moment(get_time_for_x(x));
-				var t1 = moment(get_time_for_x(x + w));
+				selection.x = x;
+				selection.w = w;
+				selection.start = moment(get_time_for_x(x));
+				selection.end = moment(get_time_for_x(x + w));
 
 				// Update the width of the selection.
 				chart.selectAll('.selection')
@@ -506,10 +508,11 @@ $(function () {
 
 				chart.selectAll('.selection_handle.start.label')
 					.attr("x", x - 5)
-					.text('start: ' + t0.format('H:mm'));
+					.text('start: ' + selection.start.format('H:mm'));
 				chart.selectAll('.selection_handle.end.label')
 					.attr("x", x + w + 5)
-					.text('end: ' + t1.format('H:mm'));
+					.text('end: ' + selection.end.format('H:mm'));
+
 			};
 
 			var create_selection = function (x, w, selections, trigger_events) {
@@ -520,8 +523,7 @@ $(function () {
 
 				clear_selection(false);
 
-				selection.x = x;
-				selection.w = w;
+				resize_selection(x,w);
 				selection.channels = selections;
 
 				select_datasets(selection.channels);
@@ -545,8 +547,8 @@ $(function () {
 						.attr("x", selection.x)
 						.attr("width", 12);
 
-					var t = moment(get_time_for_x(selection.x));
-					var t2 = moment(get_time_for_x(selection.x + selection.w));
+					selection.start = moment(get_time_for_x(selection.x));
+					selection.end = moment(get_time_for_x(selection.x + selection.w));
 
 					// Add text at left of selection
 					chart.append('text')
@@ -555,7 +557,7 @@ $(function () {
 						.attr("x", selection.x - 5)
 						.attr("fill", "black")
 						.attr("text-anchor", "end")
-						.text('start: ' + t.format('H:mm'));
+						.text('start: ' + selection.start.format('H:mm'));
 
 					// Draw right drag handle.
 					chart.append('svg:image')
@@ -573,7 +575,7 @@ $(function () {
 						.attr("x", selection.x + selection.w + 5)
 						.attr("fill", "black")
 						.attr("text-anchor", "start")
-						.text('end: ' + t2.format('H:mm'));
+						.text('end: ' + selection.end.format('H:mm'));
 
 
 					// Add drag behaviour for handles.
@@ -636,7 +638,6 @@ $(function () {
 
 				// Select ones to show
 				$.each(selection, function (index, value) {
-					console.log(index + "," + value);
 					data_sets[value].selected = true;
 				});
 				d3.selectAll('path.linechart').classed("filtered", function (d, i) {
@@ -790,6 +791,7 @@ $(function () {
 
 					})
 					.on("dragend", function () {
+						fe.logger.selection.drag_end(this);
 						d3.selectAll('.graph-bg').call(drag_behaviour);
 					})
 					.on("drag", drag_handle_move);

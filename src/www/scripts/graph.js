@@ -26,9 +26,24 @@ $(document).ready(function () {
 		else if (params.button == 'create_selection') {
 			$("#zoomIn").prop("disabled", false);
 			var annotationItem = $('#toggleAnnotations');
-			var annotations = annotationItem.data('show');
-			if (annotations) {
-				$("#addAnnotation").show();
+			var showAnnotations = annotationItem.data('show');
+			if (showAnnotations) {
+				var annotations = fe.datastore.get_annotations();
+				var selection = fe.logger.plot.get_selection();
+				var overlap = false;
+				$.each(annotations, function (id, annotation) {
+					if (fe.logger.annotation.get_selected_layer().ref === annotation.layer &&
+						selection.start.isBefore(annotation.end) && selection.end.isAfter(annotation.start)) {
+						overlap = true;
+						return false;
+					}
+				});
+				if(!overlap) {
+					$("#addAnnotation").show();
+				}
+				else {
+					$("#addAnnotation").hide();
+				}
 			}
 		}
 	});
@@ -41,7 +56,7 @@ $(document).ready(function () {
 			showShortcuts: true,
 			startOfWeek: 'monday',
 			shortcuts: {
-				'prev': ['week', 'month', 'year']
+				'prev': ['week', 'month']
 			},
 			startDate: moment(dataStart).format('D MMM YYYY'),
 			endDate: moment(dataEnd).format('D MMM YYYY')
@@ -275,7 +290,7 @@ function build_menu(sensors) {
 							var cost = value_avg * moment.duration(avg_duration).asHours() * device.cost / 1000;
 							if (cost < 100) {
 								content.append('<div class="mdl-typography--caption-color-contrast">' +
-									' Cost: ' + Number(cost.toFixed(1)) + 'p</div>')
+									' Cost: ' + Number(cost.toFixed()) + 'p</div>')
 							} else {
 								cost /= 100;
 								content.append('<div class="mdl-typography--caption-color-contrast">' +
@@ -396,7 +411,6 @@ function select_axes(new_channel) {
 }
 
 var select_axis_channel = function (key, left) {
-	console.log("Select " + (left ? 'left' : 'right') + " channel: " + key);
 	var radio_name = left ? "input[name=axis-left]" : "input[name=axis-right]";
 	$(".axis-item").each(function () {
 		var channel = $(this).data('channel-id');
@@ -491,7 +505,6 @@ function show_annotation_editor(annotation) {
 	$("#annotations-edit-dialog").submit(function (event) {
 		event.preventDefault();
 		event.stopImmediatePropagation();
-		console.log('Submitting');
 		var url = ANNOTATION_URL;
 		var annotation_id = $("#an_annotation").val();
 		if (annotation_id !== undefined && annotation_id !== '') {

@@ -79,7 +79,6 @@ $(function () {
 					});
 
 				if (selected_layer == null) {
-					console.log("First time");
 					selected_layer = layers[0];
 				}
 
@@ -113,11 +112,6 @@ $(function () {
 						var x0 = fe.logger.plot.get_x_for_time(d.start);
 						var x1 = fe.logger.plot.get_x_for_time(d.end);
 						return x1 - x0;
-					})
-					.on('click', function (e) {
-						show_annotation_editor(e);
-						d3.event.preventDefault();
-						d3.event.stopPropagation();
 					});
 
 

@@ -13,7 +13,7 @@ from deployments.models import Deployment, DeploymentAnnotation
 from graphs import simplify
 
 
-def query(deployment, sensor, channel, start=None, end=None):
+def query(deployment, sensor, channel, start=None, end=None, aggregation="2m"):
     query = select("MEAN").from_table(channel.id).where('deployment').eq(deployment.pk).where('sensor').eq(sensor.id)
     if start:
         query = query.where('time').gte(start)
@@ -24,7 +24,7 @@ def query(deployment, sensor, channel, start=None, end=None):
     if not start and not end:
         query = query.where('time').lte_now()
 
-    query = query.group_by_time("2m").fill_none().limit(10000)
+    query = query.group_by_time(aggregation).fill_none().limit(10000)
 
     return query.fetch()
 
@@ -52,7 +52,7 @@ def generate_data(deployment_id, sensors=None, channels=None, simplified=True, s
             for channel in sensor.sensor.channels.all():
                 if channels != 'all' and (channel.hidden or (channels and channel.id not in channels)):
                     continue
-                response = query(deployment, sensor.sensor, channel, start, end)
+                response = query(deployment, sensor.sensor, channel, start, end, channel.aggregation)
                 first_value = True
                 while response.has_data():
                     if simplified:

@@ -8,6 +8,7 @@ class Channel(models.Model):
     units = models.CharField(_('Units of Measurement'), max_length=10)
     name = models.CharField(_('Name'), max_length=256)
     hidden = models.BooleanField(_("Hidden"), default=False)
+    aggregation = models.CharField(_('Aggregation'), default="2m", max_length=10)
 
     def __str__(self):
         return u'%s Channel' % self.name

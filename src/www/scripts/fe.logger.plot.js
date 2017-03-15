@@ -193,6 +193,16 @@ $(function () {
 						.attr("text-anchor", "middle")
 						.text(xSc.tickFormat(10));
 
+					chart.selectAll(".xTicks2")
+						.data(xSc.ticks(20))
+						.enter().append("line")
+						.attr('class', 'graph-axis-mark')
+						.attr("x1", xSc)
+						.attr("x2", xSc)
+						.attr("y1", h - 3)
+						.attr("y2", h)
+						.style("stroke", "#666");
+
 					// draw horizontal axis ticks
 					chart.selectAll(".xTicks")
 						.data(xSc.ticks(10))
@@ -207,14 +217,14 @@ $(function () {
 			};
 
 			var draw_x_grid = function () {
-				chart.selectAll(".xGrid")
-					.data(xSc.ticks(d3.time.days))
-					.enter().append("line")
-					.attr('class', 'graph-divider')
-					.attr("x1", xSc)
-					.attr("x2", xSc)
-					.attr("y1", 0)
-					.attr("y2", h)
+//				chart.selectAll(".xGrid")
+//					.data(xSc.ticks(20))
+//					.enter().append("line")
+//					.attr('class', 'graph-divider')
+//					.attr("x1", xSc)
+//					.attr("x2", xSc)
+//					.attr("y1", 0)
+//					.attr("y2", h)
 			};
 
 			var draw_y_grid = function () {
@@ -226,6 +236,20 @@ $(function () {
 					var y_range_l = get_y_range(axis_channel_l);
 					var ySc_l = d3.scale.linear().domain([y_range_l[0], y_range_l[1]]).range([0, h]);
 					var channel_l = fe.datastore.lookup_channel(axis_channel_l);
+
+					chart.selectAll(".yTicks2-l")
+						.data(ySc_l.ticks(20))
+						.enter().append("line")
+						.attr('class', 'graph-axis-mark')
+						.attr("x1", 0)
+						.attr("x2", 2)
+						.attr("y1", function (d) {
+							return h - ySc_l(d);
+						})
+						.attr("y2", function (d) {
+							return h - ySc_l(d);
+						})
+						.style("stroke", "#666");
 
 					// draw vertical axis "ticks" (they are actually grid lines)
 					chart.selectAll(".yTicks-l")
@@ -265,6 +289,20 @@ $(function () {
 					var channel_r = fe.datastore.lookup_channel(axis_channel_r);
 					if (channel_r) {
 						// draw vertical axis "ticks" (they are actually grid lines)
+						chart.selectAll(".yTicks2-r")
+                            .data(ySc_l.ticks(20))
+                            .enter().append("line")
+                            .attr('class', 'graph-axis-mark')
+                            .attr("x1", w-2)
+                            .attr("x2", w)
+                            .attr("y1", function (d) {
+                                return h - ySc_l(d);
+                            })
+                            .attr("y2", function (d) {
+                                return h - ySc_l(d);
+                            })
+                            .style("stroke", "#666");
+
 						chart.selectAll(".yTicks-r")
 							.data(ySc_r.ticks(10))
 							.enter().append("line")

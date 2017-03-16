@@ -149,16 +149,16 @@ $(function () {
 					return;
 				}
 
-				chart.append("svg:polyline")
-					.attr('class', 'graph-axis')
-					.attr("points", '0,0 0,' + h + ' ' + w + ',' + h + ' ' + w + ',0');
-
 				draw_x_axis();
 				if (axis_channel_l || axis_channel_r) {
 					draw_y_axis();
 				}
 				draw_data();
 				select_datasets(selection.channels);
+				
+				chart.append("svg:polyline")
+					.attr('class', 'graph-axis')
+					.attr("points", '0,0 0,' + h + ' ' + w + ',' + h + ' ' + w + ',0');
 
 				draw_events();
 

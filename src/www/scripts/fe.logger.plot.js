@@ -80,57 +80,47 @@ $(function () {
 				}
 			};
 
-			var get_x_min = function () {
+			var get_x_range = function () {
 				var x_min = -1;
+				var x_max = -1;
 				$.each(fe.datastore.get_datasets(), function (index, dataset) {
 					if (x_min == -1 || dataset.x_min < x_min) {
 						x_min = dataset.x_min;
 					}
-				});
-				return x_min;
-			};
-
-			var get_x_max = function () {
-				var x_max = -1;
-				$.each(fe.datastore.get_datasets(), function (index, dataset) {
 					if (x_max == -1 || dataset.x_max > x_max) {
 						x_max = dataset.x_max;
 					}
 				});
-				return x_max;
+				return {min: x_min, max: x_max};
 			};
 
-			var get_y_min = function (channel_id) {
+			var get_y_scale = function (channel_id) {
 				var y_min = -1;
-				$.each(fe.datastore.get_datasets(), function (index, dataset) {
-					if (dataset.channel == channel_id && (y_min == -1 || dataset.y_min < y_min)) {
-						y_min = dataset.y_min;
-					}
-				});
-				return y_min;
-			};
-
-			var get_y_max = function (channel_id) {
 				var y_max = -1;
 				$.each(fe.datastore.get_datasets(), function (index, dataset) {
-					if (dataset.channel == channel_id && (y_max == -1 || dataset.y_max > y_max)) {
-						y_max = dataset.y_max;
+					if (dataset.channel == channel_id) {
+						if (y_min == -1 || dataset.y_min < y_min) {
+							y_min = dataset.y_min;
+						}
+						if (y_max == -1 || dataset.y_max > y_max) {
+							y_max = dataset.y_max;
+						}
 					}
 				});
-				return y_max;
-			};
 
-			var get_y_range = function (channel_id) {
-				var y_min = get_y_min(channel_id);
-				var y_max = get_y_max(channel_id);
 				var pad = (y_max - y_min) / 10;
+
 				y_max = y_max + pad;
-				y_min = y_min - pad;
-
 				y_max = Math.ceil(y_max / 10) * 10;
-				y_min = Math.floor(y_min / 10) * 10;
 
-				return [y_min, y_max];
+				if (y_min > 0) {
+					y_min = 0;
+				} else {
+					y_min = y_min - pad;
+					y_min = Math.floor(y_min / 10) * 10;
+				}
+
+				return d3.scale.linear().domain([y_min, y_max]).range([0, h]);
 			};
 
 			var redraw = function () {
@@ -139,10 +129,8 @@ $(function () {
 				w = get_width();
 				h = get_height();
 
-				var x_min = get_x_min();
-				var x_max = get_x_max();
-
-				xSc = d3.time.scale().domain([x_min, x_max]).range([0, w]);
+				var x_range = get_x_range();
+				xSc = d3.time.scale().domain([x_range.min, x_range.max]).range([0, w]);
 
 				// clear any existing stuff (in case of refresh)
 				d3.selectAll(selector.toArray()).select("svg").remove();
@@ -166,9 +154,8 @@ $(function () {
 					.attr("points", '0,0 0,' + h + ' ' + w + ',' + h + ' ' + w + ',0');
 
 				draw_x_axis();
-				draw_x_grid();
 				if (axis_channel_l || axis_channel_r) {
-					draw_y_grid();
+					draw_y_axis();
 				}
 				draw_data();
 				select_datasets(selection.channels);
@@ -216,25 +203,13 @@ $(function () {
 				}
 			};
 
-			var draw_x_grid = function () {
-//				chart.selectAll(".xGrid")
-//					.data(xSc.ticks(20))
-//					.enter().append("line")
-//					.attr('class', 'graph-divider')
-//					.attr("x1", xSc)
-//					.attr("x2", xSc)
-//					.attr("y1", 0)
-//					.attr("y2", h)
-			};
-
-			var draw_y_grid = function () {
+			var draw_y_axis = function () {
 				var fmt = d3.format('.0f');
 
 				//// Left axis
 
 				if (axis_channel_l) {
-					var y_range_l = get_y_range(axis_channel_l);
-					var ySc_l = d3.scale.linear().domain([y_range_l[0], y_range_l[1]]).range([0, h]);
+					var ySc_l = get_y_scale(axis_channel_l);
 					var channel_l = fe.datastore.lookup_channel(axis_channel_l);
 
 					chart.selectAll(".yTicks2-l")
@@ -284,24 +259,23 @@ $(function () {
 				//// Right axis
 
 				if (axis_channel_r) {
-					var y_range_r = get_y_range(axis_channel_r);
-					var ySc_r = d3.scale.linear().domain([y_range_r[0], y_range_r[1]]).range([0, h]);
+					var ySc_r = get_y_scale(axis_channel_r);
 					var channel_r = fe.datastore.lookup_channel(axis_channel_r);
 					if (channel_r) {
 						// draw vertical axis "ticks" (they are actually grid lines)
 						chart.selectAll(".yTicks2-r")
-                            .data(ySc_l.ticks(20))
-                            .enter().append("line")
-                            .attr('class', 'graph-axis-mark')
-                            .attr("x1", w-2)
-                            .attr("x2", w)
-                            .attr("y1", function (d) {
-                                return h - ySc_l(d);
-                            })
-                            .attr("y2", function (d) {
-                                return h - ySc_l(d);
-                            })
-                            .style("stroke", "#666");
+							.data(ySc_l.ticks(20))
+							.enter().append("line")
+							.attr('class', 'graph-axis-mark')
+							.attr("x1", w - 2)
+							.attr("x2", w)
+							.attr("y1", function (d) {
+								return h - ySc_l(d);
+							})
+							.attr("y2", function (d) {
+								return h - ySc_l(d);
+							})
+							.style("stroke", "#666");
 
 						chart.selectAll(".yTicks-r")
 							.data(ySc_r.ticks(10))
@@ -339,8 +313,7 @@ $(function () {
 				var data_sets = fe.datastore.get_datasets();
 
 				$.each(data_sets, function (index, data_set) {
-					var y_range = get_y_range(data_set.channel);
-					var ySc = d3.scale.linear().domain([y_range[0], y_range[1]]).range([0, h]);
+					var ySc = get_y_scale(data_set.channel);
 					var d3line = d3.svg.line()
 						.x(function (d) {
 							return xSc(d.time);
@@ -361,9 +334,10 @@ $(function () {
 			};
 
 			var draw_antievents = function () {
+				var x_range = get_x_range();
 				var antiEvents = [{
-					start: get_x_min(),
-					end: get_x_max()
+					start: x_range.min,
+					end: x_range.max
 				}];
 
 				var mouseG = chart.append("g")
@@ -523,7 +497,7 @@ $(function () {
 
 				clear_selection(false);
 
-				resize_selection(x,w);
+				resize_selection(x, w);
 				selection.channels = selections;
 
 				select_datasets(selection.channels);
@@ -724,19 +698,19 @@ $(function () {
 								}
 								var xDate = moment(xSc.invert(mouse[0]));
 								var maxIndex = d.data.length - 1;
-								if(d.data[0].time < xDate && d.data[maxIndex].time > xDate) {
+								if (d.data[0].time < xDate && d.data[maxIndex].time > xDate) {
 									var index = 0;
 									while (index != maxIndex) {
 										var currentIndex = (index + maxIndex) / 2 | 0;
-										if(d.data[currentIndex].time > xDate) {
+										if (d.data[currentIndex].time > xDate) {
 											maxIndex = currentIndex;
-											if(d.data[currentIndex - 1].time <= xDate){
+											if (d.data[currentIndex - 1].time <= xDate) {
 												index = currentIndex - 1;
 												break;
 											}
 										} else {
 											index = currentIndex;
-											if(d.data[currentIndex + 1].time > xDate) {
+											if (d.data[currentIndex + 1].time > xDate) {
 												maxIndex = currentIndex + 1;
 												break;
 											}
@@ -746,9 +720,7 @@ $(function () {
 									var pos = fe.datastore.get_position(d.data[index], d.data[maxIndex], xDate);
 									d3.select(this).select('text').text(pos.toFixed(2) + d.units);
 
-									var y_range = get_y_range(d.channel);
-									var ySc = d3.scale.linear().domain([y_range[0], y_range[1]]).range([0, h]);
-
+									var ySc = get_y_scale(d.channel);
 									return "translate(" + mouse[0] + "," + (h - ySc(pos)) + ")";
 								}
 

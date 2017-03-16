@@ -266,7 +266,7 @@ $(function () {
 					if (channel_r) {
 						// draw vertical axis "ticks" (they are actually grid lines)
 						chart.selectAll(".yTicks2-r")
-							.data(ySc_l.ticks(20))
+							.data(ySc_r.ticks(20))
 							.enter().append("line")
 							.attr('class', 'graph-axis-mark')
 							.attr("x1", w - 3)

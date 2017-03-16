@@ -149,13 +149,13 @@ $(function () {
 					return;
 				}
 
+				draw_data();
 				draw_x_axis();
 				if (axis_channel_l || axis_channel_r) {
 					draw_y_axis();
 				}
-				draw_data();
 				select_datasets(selection.channels);
-				
+
 				chart.append("svg:polyline")
 					.attr('class', 'graph-axis')
 					.attr("points", '0,0 0,' + h + ' ' + w + ',' + h + ' ' + w + ',0');
@@ -188,7 +188,8 @@ $(function () {
 						.attr("x2", xSc)
 						.attr("y1", h - 3)
 						.attr("y2", h)
-						.style("stroke", "#666");
+						.style("opacity", "0.3")
+						.style("stroke", "#000");
 
 					// draw horizontal axis ticks
 					chart.selectAll(".xTicks")
@@ -224,7 +225,8 @@ $(function () {
 						.attr("y2", function (d) {
 							return h - ySc_l(d);
 						})
-						.style("stroke", "#666");
+						.style("opacity", "0.3")
+						.style("stroke", "#000");
 
 					// draw vertical axis "ticks" (they are actually grid lines)
 					chart.selectAll(".yTicks-l")
@@ -275,7 +277,8 @@ $(function () {
 							.attr("y2", function (d) {
 								return h - ySc_l(d);
 							})
-							.style("stroke", "#666");
+							.style("opacity", "0.3")
+							.style("stroke", "#000");
 
 						chart.selectAll(".yTicks-r")
 							.data(ySc_r.ticks(10))

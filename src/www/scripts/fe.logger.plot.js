@@ -272,10 +272,10 @@ $(function () {
 							.attr("x1", w - 3)
 							.attr("x2", w)
 							.attr("y1", function (d) {
-								return h - ySc_l(d);
+								return h - ySc_r(d);
 							})
 							.attr("y2", function (d) {
-								return h - ySc_l(d);
+								return h - ySc_r(d);
 							})
 							.style("opacity", "0.3")
 							.style("stroke", "#000");

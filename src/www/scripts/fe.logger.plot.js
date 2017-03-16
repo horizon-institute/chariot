@@ -205,10 +205,7 @@ $(function () {
 			};
 
 			var draw_y_axis = function () {
-				var fmt = d3.format('.0f');
-
 				//// Left axis
-
 				if (axis_channel_l) {
 					var ySc_l = get_y_scale(axis_channel_l);
 					var channel_l = fe.datastore.lookup_channel(axis_channel_l);

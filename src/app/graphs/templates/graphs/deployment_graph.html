@@ -71,12 +71,13 @@
     <input type="hidden" id="an_layer" name="layer"/>
     <input type="hidden" id="an_start" name="start"/>
     <input type="hidden" id="an_end" name="end"/>
-    <div class="mdl-shadow--2dp" style="background: #FFF">
+    <div class="mdl-shadow--2dp" style="background: #FFF; width: 350px">
         <div style="padding: 16px">
-            <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+            <div id="an_textfield" class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
                 <label for="an_text" class="mdl-textfield__label">Annotation</label>
                 <input name="text" type="text" class="mdl-textfield__input" id="an_text" autocomplete="off">
             </div>
+            <div><span id="anno_start"></span> &ndash; <span id="anno_end"></span></div>
         </div>
         <div style="display: flex; justify-content: flex-end; padding: 4px;">
             <button id="annotation-delete" type="button" class="mdl-button mdl-js-button">Delete</button>

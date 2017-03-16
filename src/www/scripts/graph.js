@@ -86,15 +86,13 @@ $(document).ready(function () {
 			var plot = fe.logger.plot;
 			var selection = plot.get_selection();
 			if (selection.w > 0) {
-				var selection_start_t = plot.get_time_for_x(selection.x);
-				var selection_end_t = plot.get_time_for_x(selection.x + selection.w);
 				var selected_layer = fe.logger.annotation.get_selected_layer();
 				if (selected_layer) {
 					show_annotation_editor({
 						"id": null,
 						"text": "",
-						"start": selection_start_t,
-						"end": selection_end_t,
+						"start": selection.start,
+						"end": selection.end,
 						"layer": selected_layer.ref
 					});
 
@@ -149,13 +147,6 @@ $(document).ready(function () {
 		$("#zoomOut").prop("disabled", zooms.length == 0);
 		update_date_range(zoom.startDate, zoom.endDate);
 	}).prop("disabled", true);
-
-	// If an event gets to the body
-	$("#annotations-edit-dialog").click(function () {
-		$("#annotations-edit-dialog").fadeOut();
-	}).children().click(function (e) {
-		e.stopPropagation();
-	});
 
 	update_date_range(moment(dataStart).startOf('day'), moment(dataEnd).endOf('day'));
 	$(window).resize(function () {
@@ -482,6 +473,9 @@ function show_annotation_editor(annotation) {
 	$('#an_end').val(moment(annotation.end).format('DD/MM/YYYY HH:mm:ss'));
 	$('#an_deployment').val(DEPLOYMENT_ID);
 	$('#an_annotation').val(annotation.id);
+	$('#anno_start').text(annotation.start.format('Do MMM YYYY HH:mm:ss'));
+	$('#anno_end').text(annotation.end.format('Do MMM YYYY HH:mm:ss'));
+
 	if (annotation.id) {
 		$("#annotation-delete").click(function (event) {
 			event.preventDefault();
@@ -520,8 +514,18 @@ function show_annotation_editor(annotation) {
 	})
 		.css("display", "flex")
 		.hide()
-		.fadeIn();
+		.off("click")
+		.fadeIn(400, function() {
+			// If an event gets to the body
+			$("#annotations-edit-dialog").click(function () {
+				$("#annotations-edit-dialog").fadeOut();
+			}).children().click(function (e) {
+				e.stopPropagation();
+			});
+		});
 
 	$('#an_text').val(annotation.text)
 		.focus();
+
+	document.getElementById('an_textfield').MaterialTextfield.checkDirty();
 }

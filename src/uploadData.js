@@ -12,10 +12,7 @@ var deployment = 4;
 lineReader.eachLine('data.txt', function(line, last, cb) {
 	if (!line.startsWith('name\ttimestamp')) {
 		const items = line.split('\t');
-		const item = items[0] + ',deployment=' + deployment + ',sensor=' + items[3] + ' value=' + items[2] + ' ' + moment(items[1], "YYYY-MM-DD HH:mm:ss").valueOf() + '\n';
-		if (items[4] != '8') {
-			console.log(items[4]);
-		}
+		const item = items[0] + ',deployment=' + items[4] + ',sensor=' + items[3] + ' value=' + items[2] + ' ' + moment(items[1], "YYYY-MM-DD HH:mm:ss").valueOf() + '\n';
 		batch = batch + item;
 		index++;
 		if (index > batches) {

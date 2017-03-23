@@ -20,11 +20,11 @@ $(document).ready(function () {
 	});
 	chartDiv.bind("logger:click", function (event, params) {
 		if (params.button === 'clear_selection') {
-			$("#zoomIn").prop("disabled", true);
+			$("#zoomIn").prop("disabled", true).hide().show();
 			$("#addAnnotation").hide();
 		}
 		else if (params.button === 'create_selection') {
-			$("#zoomIn").prop("disabled", false);
+			$("#zoomIn").prop("disabled", false).hide().show();
 			var annotationItem = $('#toggleAnnotations');
 			var showAnnotations = annotationItem.data('show');
 			if (showAnnotations) {
@@ -71,11 +71,11 @@ $(document).ready(function () {
 					startDate: dataStartDay,
 					endDate: dataEndDay
 				}];
-				$("#zoomOut").prop("disabled", false);
+				$("#zoomOut").prop("disabled", false).hide().show();
 			}
 			else {
 				zooms = [];
-				$("#zoomOut").prop("disabled", true);
+				$("#zoomOut").prop("disabled", true).hide().show();
 			}
 			update_date_range(startDay, endDay);
 		});
@@ -135,7 +135,7 @@ $(document).ready(function () {
 				startDate: startDate,
 				endDate: endDate
 			});
-			$("#zoomOut").prop("disabled", false);
+			$("#zoomOut").prop("disabled", false).hide().show();
 			var start = moment(fe.logger.plot.get_time_for_x(selection.x));
 			var end = moment(fe.logger.plot.get_time_for_x(selection.x + selection.w));
 			fe.logger.plot.clear_selection();
@@ -144,7 +144,7 @@ $(document).ready(function () {
 	});
 	$("#zoomOut").click(function () {
 		var zoom = zooms.pop();
-		$("#zoomOut").prop("disabled", zooms.length === 0);
+		$("#zoomOut").prop("disabled", zooms.length === 0).hide().show();
 		update_date_range(zoom.startDate, zoom.endDate);
 	});
 

@@ -1,4 +1,5 @@
 {% extends 'chariot/base.html' %}
+{% load crispy_forms_tags %}
 
 {% block title %}Edit Sensor{% endblock %}
 
@@ -10,16 +11,7 @@
             <input name="deployment" value="{{sensor.deployment.pk}}" type="hidden">
             <input name="sensor" value="{{sensor.sensor.id}}" type="hidden">
 
-            {{ form.non_field_errors }}
-            <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
-                <label for="id_location" class="mdl-textfield__label ">
-                    Location
-                </label>
-                <input name="location" value="{{sensor.location}}" class="mdl-textfield__input" maxlength="255" type="text" id="id_location">
-                <span class="mdl-textfield__error">{{ form.location.errors }}</span>
-            </div>
-
-            <div>
+            <div  class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label" style="padding-top: 0">
                 <label class="device-label">
                     Sensor
                 </label>
@@ -28,26 +20,94 @@
                 </div>
             </div>
 
-            {% for reading in sensor.latest_readings %}
-                <div>
-                    <label class="device-label">
-                        {{ reading.channel.name }}
-                    </label>
-                    <div>
-                    {% if 'value' in reading %}
-                        {{ reading.value|floatformat }}{{ reading.channel.units }}
-                    {% else %}
-                        No data
-                    {% endif %}
-                    </div>
+            {{ form.non_field_errors }}
+
+            <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+                <label for="id_location" class="mdl-textfield__label ">
+                    Room
+                </label>
+                <input name="location" value="{{sensor.location}}" class="mdl-textfield__input" maxlength="255" type="text" id="id_location">
+                <span class="mdl-textfield__error">{{ form.location.errors }}</span>
+            </div>
+
+            <div style="display:flex; text-align: right">
+            <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+                <label for="id_room_width" class="mdl-textfield__label ">
+                    Room Width
+                </label>
+                <div style="display: flex">
+                <input name="room_width" value="{{sensor.room_width}}" class="mdl-textfield__input" style="text-align: right" type="number" step="any" min="0" id="id_room_width">
+                    <div style="margin-top: 3px; margin-left: 3px; color: #666;">m</div>
                 </div>
+                <span class="mdl-textfield__error">{{ form.room_width.errors }}</span>
+            </div>
+
+                <div style="width: 64px">&nbsp</div>
+
+            <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+                <label for="id_room_length" class="mdl-textfield__label ">
+                    Room Length
+                </label>
+                <div style="display: flex">
+                    <input name="room_length" value="{{sensor.room_width}}" class="mdl-textfield__input" style="text-align: right" type="number" step="any" min="0" id="id_room_length">
+                    <div style="margin-top: 3px; margin-left: 3px; color: #666;">m</div>
+                </div>
+                <span class="mdl-textfield__error">{{ form.room_length.errors }}</span>
+            </div>
+
+                <div style="width: 64px">&nbsp</div>
+
+            <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+                <label for="id_room_height" class="mdl-textfield__label ">
+                    Room Height
+                </label>
+                <div style="display: flex">
+                    <input name="room_height" value="{{sensor.room_width}}" class="mdl-textfield__input" style="text-align: right" type="number" step="any" min="0" id="id_room_height">
+                    <div style="margin-top: 3px; margin-left: 3px; color: #666;">m</div>
+                </div>
+                <span class="mdl-textfield__error">{{ form.room_height.errors }}</span>
+            </div>
+            </div>
+
+            {% for reading in sensor.latest_readings %}
                 {% if reading.channel == sensor.sensor.cost_channel %}
+                    <div style="display:flex">
+                    <div  class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label"  style="padding-top: 0">
+                        <label class="device-label" >
+                            {{ reading.channel.name }}
+                        </label>
+                        <div>
+                            {% if 'value' in reading %}
+                                {{ reading.value|floatformat }}{{ reading.channel.units }}
+                            {% else %}
+                                No data
+                            {% endif %}
+                        </div>
+                    </div>
+
                     <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
-                        <label for="id_location" class="mdl-textfield__label ">
+                        <label for="id_cost" class="mdl-textfield__label ">
                             {{sensor.sensor.cost_channel.name}} Cost
                         </label>
-                        <input name="cost" value="{{sensor.cost}}" class="mdl-textfield__input" type="number" step="any" id="id_cost">
+                        <div style="display: flex">
+                            <input name="cost" value="{{sensor.cost}}" class="mdl-textfield__input" type="number" style="text-align: right" step="any" id="id_cost">
+                            <small style="margin-top: 3px; margin-left: 3px; color: #666;" title="pence per kilowatt hour">p/kWh</small>
+                        </div>
                         <span class="mdl-textfield__error">{{ form.cost.errors }}</span>
+                    </div>
+                    </div>
+                {% else %}
+                    <div  class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label"  style="padding-top: 0">
+                        <label class="device-label">
+                            {{ reading.channel.name }}
+                        </label>
+                        <div>
+                            {% if 'value' in reading %}
+                                {{ reading.value|floatformat }}{{ reading.channel.units }}
+                            {% else %}
+                                No data
+                            {% endif %}
+                        </div>
                     </div>
                 {% endif %}
             {% endfor %}

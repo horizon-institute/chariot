@@ -14,22 +14,25 @@ from graphs import simplify
 
 
 def query(deployment, sensor, channel, start=None, end=None, aggregation="2m"):
-    query = select("MEAN").from_table(channel.id).where('deployment').eq(deployment.pk).where('sensor').eq(sensor.id)
+    query_obj = select("MEAN").from_table(channel.id) \
+        .where('deployment').eq(deployment.pk) \
+        .where('sensor').eq(sensor.id)
     if start:
-        query = query.where('time').gte(start)
+        query_obj = query_obj.where('time').gte(start)
 
     if end:
-        query = query.where('time').lte(end)
+        query_obj = query_obj.where('time').lte(end)
 
     if not start and not end:
-        query = query.where('time').lte_now()
+        query_obj = query_obj.where('time').lte_now()
 
-    query = query.group_by_time(aggregation).fill_none().limit(10000)
+    query_obj = query_obj.group_by_time(aggregation).fill_none().limit(10000)
 
-    return query.fetch()
+    return query_obj.fetch()
 
 
-def generate_data(deployment_id, sensors=None, channels=None, simplified=True, start=None, end=None):
+def generate_data(deployment_id, sensors=None, channels=None, simplified=True, start=None,
+                  end=None):
     try:
         yield '{"sensors":['
         deployment = Deployment.objects.get(pk=deployment_id)
@@ -50,9 +53,11 @@ def generate_data(deployment_id, sensors=None, channels=None, simplified=True, s
 
             first_channel = True
             for channel in sensor.sensor.channels.all():
-                if channels != 'all' and (channel.hidden or (channels and channel.id not in channels)):
+                if channels != 'all' and (
+                            channel.hidden or (channels and channel.id not in channels)):
                     continue
-                response = query(deployment, sensor.sensor, channel, start, end, channel.aggregation)
+                response = query(deployment, sensor.sensor, channel, start, end,
+                                 channel.aggregation)
                 first_value = True
                 while response.has_data():
                     if simplified:

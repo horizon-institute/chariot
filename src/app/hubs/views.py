@@ -1,8 +1,6 @@
 # encoding:UTF-8
 import logging
 
-from django.utils import timezone
-from datetime import datetime, timedelta
 from chariot.influx import influx
 from datetime import datetime
 from django.core.urlresolvers import reverse

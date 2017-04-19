@@ -109,15 +109,15 @@ def to_json_list(l):
 def log_request(view, request):
     user = request.GET.get('user', request.user.id)
 
-    paramsDict = {}
+    params_dict = {}
     if request.method == "POST":
-        paramsDict = request.POST
+        params_dict = request.POST
     elif request.method == "GET":
-        paramsDict = request.GET
+        params_dict = request.GET
     else:
         pass
 
-    params = ', '.join(['"%s": "%s"' % (k, v) for k, v in paramsDict.items()])
+    params = ', '.join(['"%s": "%s"' % (k, v) for k, v in params_dict.items()])
 
     msg = '"user": "%s", "view": "%s", "%s": {%s}' % (user, view, request.method, params)
     logger.info(msg)

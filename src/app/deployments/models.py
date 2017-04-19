@@ -20,10 +20,19 @@ class Deployment(models.Model):
     notes = models.TextField(null=True, blank=True)
     created = models.DateTimeField(auto_now_add=True)
 
-    photo = models.ImageField(_('Header Image'), upload_to='deployment_photos', null=True, blank=True)
+    photo = models.ImageField(_('Header Image'), null=True, blank=True,
+                              upload_to='deployment_photos')
 
     start_date = models.DateTimeField(null=True, blank=True)
     end_date = models.DateTimeField(null=True, blank=True)
+
+    boiler_manufacturer = models.CharField(max_length=255, null=True, blank=True)
+    boiler_model = models.CharField(max_length=255, null=True, blank=True)
+    boiler_output = models.FloatField(null=True, blank=True)
+    boiler_efficiency = models.FloatField(null=True, blank=True)
+    building_width = models.FloatField(default=0)
+    building_height = models.FloatField(default=0)
+    building_length = models.FloatField(default=0)
 
     hub = models.OneToOneField(Hub, blank=True, null=True)
 
@@ -82,6 +91,9 @@ class DeploymentAnnotation(models.Model):
 class DeploymentSensor(models.Model):
     deployment = models.ForeignKey(Deployment, related_name='sensors')
     sensor = models.ForeignKey(Sensor)
+    room_width = models.FloatField(default=0)
+    room_height = models.FloatField(default=2.4)
+    room_length = models.FloatField(default=0)
     cost = models.FloatField(default=0)
     location = models.CharField(max_length=255, blank=True, null=True)
 
@@ -127,7 +139,7 @@ class DeploymentSensor(models.Model):
                             'time': datetime.datetime.fromtimestamp(result['time']/1000.0),
                             'value': result['last']
                         }
-            except Exception:
+            except Exception as e:
                 pass
 
         return latest_reading

@@ -7,6 +7,7 @@ from django.db import migrations
 
 fixture = 'initial_data'
 
+
 def load_fixture(apps, schema_editor):
     call_command('loaddata', fixture, app_label='sensors')
 

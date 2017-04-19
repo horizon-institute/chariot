@@ -11,6 +11,8 @@ urlpatterns = [
     url(r'^(?P<pk>\d+)/sensor/(?P<id>\d+)$', DeploymentSensorView.as_view(), name='sensor'),
 
     url(r'^annotation$', DeploymentAnnotationCreate.as_view(), name='annotation-create'),
-    url(r'^annotation/(?P<pk>\d+)$', DeploymentAnnotationUpdate.as_view(), name='annotation-update'),
-    url(r'^annotation/(?P<pk>\d+)/delete$', DeploymentAnnotationDelete.as_view(), name='annotation-delete'),
+    url(r'^annotation/(?P<pk>\d+)$', DeploymentAnnotationUpdate.as_view(),
+        name='annotation-update'),
+    url(r'^annotation/(?P<pk>\d+)/delete$', DeploymentAnnotationDelete.as_view(),
+        name='annotation-delete'),
 ]

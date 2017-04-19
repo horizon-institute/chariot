@@ -12,7 +12,7 @@
 {% block content %}
 <div class="mdl-grid">
 	<div class="mdl-cell mdl-cell--6-col mdl-cell--1-offset-tablet">
-		{% crispy form %}
+        {% include "deployments/deployment_form_fragment.html" with deployment=deployment button='Update Deployment' %}
 	</div>
 
 	<div class="mdl-cell mdl-cell--6-col mdl-cell--1-offset-tablet">

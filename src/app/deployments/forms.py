@@ -54,53 +54,29 @@ class DeploymentAnnotationForm(forms.ModelForm):
 class DeploymentUpdateForm(forms.ModelForm):
     address_line_one = forms.CharField(label='First Line of Address')
 
-    def __init__(self, *args, **kwargs):
-        super(DeploymentUpdateForm, self).__init__(*args, **kwargs)
-        self.helper = FormHelper()
-        self.helper.form_method = 'post'
-        self.helper.field_template = 'chariot/field.html'
-        self.helper.layout = Layout(
+    class Meta:
+        fields = [
             'photo',
             'client_name',
             'address_line_one',
             'post_code',
             'notes',
-            Submit(
-                'save', 'Save Changes',
-                css_class='mdl-button mdl-js-button button_right mdl-button--raised mdl-button--colored')
-        )
-
-    class Meta:
-        fields = [
-            'client_name', 'photo', 'address_line_one', 'post_code', 'notes']
+            'building_width',
+            'building_height',
+            'building_length',
+            'boiler_manufacturer',
+            'boiler_model',
+            'boiler_output',
+            'boiler_efficiency', ]
         model = Deployment
 
 
 class DeploymentCreateForm(forms.ModelForm):
-    address_line_one = forms.CharField(label='First Line of Address')
-    hub = forms.ModelChoiceField(queryset=Hub.objects.filter(deployment__isnull=True), empty_label=None)
-
-    def __init__(self, *args, **kwargs):
-        super(DeploymentCreateForm, self).__init__(*args, **kwargs)
-        self.helper = FormHelper()
-        self.helper.form_method = 'post'
-        self.helper.field_template = 'chariot/field.html'
-        self.helper.layout = Layout(
-            'photo',
-            'client_name',
-            'hub',
-            'address_line_one',
-            'post_code',
-            # TODO Add cost fields?: forms.Field(widget=NumberInput, label='Gas Cost (pence per KWh)')
-            'notes',
-            Submit(
-                'save', 'Create Deployment',
-                css_class='mdl-button mdl-js-button button_right mdl-button--raised mdl-button--colored')
-        )
+    hub = forms.ModelChoiceField(queryset=Hub.objects.filter(deployment__isnull=True),
+                                 empty_label=None)
 
     def save(self, commit=True):
         # TODO Check hub
-
         instance = super(DeploymentCreateForm, self).save(commit=False)
         if commit:
             instance.save()
@@ -108,14 +84,27 @@ class DeploymentCreateForm(forms.ModelForm):
         # Create DeploymentSensors for all default sensors
         sensors = Sensor.objects.filter(default=True)
         for sensor in sensors:
-            sensor_deployment = DeploymentSensor(sensor=sensor, deployment=instance, location=sensor.name)
+            sensor_deployment = DeploymentSensor(sensor=sensor,
+                                                 deployment=instance,
+                                                 location=sensor.name)
             sensor_deployment.save()
 
         return instance
 
     class Meta:
         fields = [
-            'client_name', 'photo', 'hub', 'address_line_one', 'post_code', 'notes']
+            'photo',
+            'client_name',
+            'hub',
+            'address_line_one',
+            'post_code',
+            'boiler_manufacturer',
+            'boiler_model',
+            'boiler_output',
+            'boiler_efficiency',
+            'building_width',
+            'building_height',
+            'building_length', ]
         model = Deployment
 
 
@@ -137,18 +126,12 @@ class DeploymentStartForm(forms.ModelForm):
         self.instance.start()
 
 
-class DeploymentUpdatePhotoForm(forms.ModelForm):
-    class Meta:
-        fields = ['photo']
-        model = Deployment
-
-
 class DeploymentSensorUpdateForm(forms.ModelForm):
     location = forms.CharField()
     cost = forms.FloatField(required=False)
 
     class Meta:
-        fields = ['location', 'cost']
+        fields = ['location', 'cost', 'room_height', 'room_length', 'room_width']
         model = DeploymentSensor
 
 

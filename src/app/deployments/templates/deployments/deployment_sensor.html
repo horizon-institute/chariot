@@ -1,5 +1,6 @@
 {% extends 'chariot/base.html' %}
 {% load crispy_forms_tags %}
+{% load crispy_forms_field %}
 
 {% block title %}Edit Sensor{% endblock %}
 
@@ -26,7 +27,7 @@
                 <label for="id_location" class="mdl-textfield__label ">
                     Room
                 </label>
-                <input name="location" value="{{sensor.location}}" class="mdl-textfield__input" maxlength="255" type="text" id="id_location">
+                {% crispy_field form.location 'class' 'mdl-textfield__input'%}
                 <span class="mdl-textfield__error">{{ form.location.errors }}</span>
             </div>
 
@@ -36,7 +37,7 @@
                     Room Width
                 </label>
                 <div style="display: flex">
-                <input name="room_width" value="{{sensor.room_width}}" class="mdl-textfield__input" style="text-align: right" type="number" step="any" min="0" id="id_room_width">
+                    {% crispy_field form.room_width 'class' 'mdl-textfield__input' 'min' '0' 'style' 'text-align:right'%}
                     <div style="margin-top: 3px; margin-left: 3px; color: #666;">m</div>
                 </div>
                 <span class="mdl-textfield__error">{{ form.room_width.errors }}</span>
@@ -49,7 +50,7 @@
                     Room Length
                 </label>
                 <div style="display: flex">
-                    <input name="room_length" value="{{sensor.room_width}}" class="mdl-textfield__input" style="text-align: right" type="number" step="any" min="0" id="id_room_length">
+                    {% crispy_field form.room_length 'class' 'mdl-textfield__input' 'min' '0' 'style' 'text-align:right'%}
                     <div style="margin-top: 3px; margin-left: 3px; color: #666;">m</div>
                 </div>
                 <span class="mdl-textfield__error">{{ form.room_length.errors }}</span>
@@ -62,7 +63,7 @@
                     Room Height
                 </label>
                 <div style="display: flex">
-                    <input name="room_height" value="{{sensor.room_width}}" class="mdl-textfield__input" style="text-align: right" type="number" step="any" min="0" id="id_room_height">
+                    {% crispy_field form.room_height 'class' 'mdl-textfield__input' 'min' '0' 'style' 'text-align:right'%}
                     <div style="margin-top: 3px; margin-left: 3px; color: #666;">m</div>
                 </div>
                 <span class="mdl-textfield__error">{{ form.room_height.errors }}</span>
@@ -90,7 +91,7 @@
                             {{sensor.sensor.cost_channel.name}} Cost
                         </label>
                         <div style="display: flex">
-                            <input name="cost" value="{{sensor.cost}}" class="mdl-textfield__input" type="number" style="text-align: right" step="any" id="id_cost">
+                            {% crispy_field form.cost 'class' 'mdl-textfield__input' 'min' '0' 'style' 'text-align:right'%}
                             <small style="margin-top: 3px; margin-left: 3px; color: #666;" title="pence per kilowatt hour">p/kWh</small>
                         </div>
                         <span class="mdl-textfield__error">{{ form.cost.errors }}</span>

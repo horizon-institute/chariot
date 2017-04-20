@@ -12,7 +12,7 @@
             <input name="deployment" value="{{sensor.deployment.pk}}" type="hidden">
             <input name="sensor" value="{{sensor.sensor.id}}" type="hidden">
 
-            <div  class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label" style="padding-top: 0">
+            <div  class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label" style="padding-top: 4px">
                 <label class="device-label">
                     Sensor
                 </label>
@@ -73,7 +73,7 @@
             {% for reading in sensor.latest_readings %}
                 {% if reading.channel == sensor.sensor.cost_channel %}
                     <div style="display:flex">
-                    <div  class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label"  style="padding-top: 0">
+                    <div  class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label"  style="padding-top: 4px">
                         <label class="device-label" >
                             {{ reading.channel.name }}
                         </label>
@@ -98,7 +98,7 @@
                     </div>
                     </div>
                 {% else %}
-                    <div  class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label"  style="padding-top: 0">
+                    <div  class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label"  style="padding-top: 4px">
                         <label class="device-label">
                             {{ reading.channel.name }}
                         </label>

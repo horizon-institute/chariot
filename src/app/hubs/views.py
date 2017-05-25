@@ -32,7 +32,7 @@ class DeploymentSensorIDSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = DeploymentSensor
-        fields = ('sensor', 'cost', 'location')
+        fields = ('sensor', 'cost', 'location', 'room_width', 'room_height', 'room_length')
 
 
 class DeploymentSerializer(serializers.ModelSerializer):
@@ -41,7 +41,9 @@ class DeploymentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Deployment
-        fields = ('id', 'hub', 'sensors')
+        fields = ('id', 'hub', 'sensors',
+                  'boiler_manufacturer', 'boiler_model', 'boiler_output', 'boiler_efficiency',
+                  'building_width', 'building_height', 'building_length')
 
 
 class DeploymentListView(ListAPIView):
@@ -72,7 +74,8 @@ def get_token(request, id):
     try:
         hub = Hub.objects.get(id=id)
         token = Token.objects.latest('created')
-        return HttpResponse(json.dumps({'token': token.key, 'deployment': hub.deployment.pk}), content_type='application/json')
+        return HttpResponse(json.dumps({'token': token.key, 'deployment': hub.deployment.pk}),
+                            content_type='application/json')
     except Hub.DoesNotExist:
         return HttpResponse(status=404)
     except Token.DoesNotExist:
@@ -172,4 +175,5 @@ class DataView(APIView):
 
         simplify = 'simplify' not in request.GET or request.GET['simplify'].lower() != 'false'
 
-        return StreamingHttpResponse(generate_data(pk, sensors, channels, simplify, start, end), content_type="application/json")
+        return StreamingHttpResponse(generate_data(pk, sensors, channels, simplify, start, end),
+                                     content_type="application/json")

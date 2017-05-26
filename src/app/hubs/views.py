@@ -137,6 +137,17 @@ class SensorReading(APIView):
         return Response("failed", status=status.HTTP_400_BAD_REQUEST)
 
 
+class DeploymentPrediction(APIView):
+    authentication_classes = (authentication.TokenAuthentication,)
+
+    def put(self, request, pk):
+        try:
+            deployment = Deployment.objects.get(pk=pk)
+        except Deployment.DoesNotExist:
+            raise HttpResponse(status=404)
+        return Response("success", status=status.HTTP_200_OK)
+
+
 class HubCreateView(LoginRequiredMixin, BackButtonMixin, CreateView):
     form_class = HubCreateForm
     model = Hub

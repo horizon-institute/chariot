@@ -1,9 +1,14 @@
-version: '2'
+version: '3'
 services:
     influx:
         image: influxdb:alpine
         ports:
             - "8086:8086"
+        logging:
+            driver: json-file
+            options:
+                max-size: "100m"
+                max-file: "3"
 
     db:
         image: postgres:alpine
@@ -11,6 +16,11 @@ services:
             POSTGRES_DB: chariot
             POSTGRES_USER: chariot
             POSTGRES_PASSWORD: chariot
+        logging:
+            driver: json-file
+            options:
+                max-size: "100m"
+                max-file: "3"
 
     app:
         build: src/app
@@ -21,6 +31,11 @@ services:
             - ./src/app:/app
             - /media
             - /static
+        logging:
+            driver: json-file
+            options:
+                max-size: "100m"
+                max-file: "3"
 
     web:
         restart: always
@@ -37,6 +52,11 @@ services:
             - ./src/www:/www
         volumes_from:
             - app
+        logging:
+            driver: json-file
+            options:
+                max-size: "100m"
+                max-file: "3"
 
     cert:
         build: src/cert

@@ -12,7 +12,7 @@ CHECK_FREQ="${CHECK_FREQ:-10}"
 check() {
 	echo "Checking certificates"
 
-	certbot renew -n --dry-run --agree-tos --email ${EMAIL} --post-hook "/renewed.sh"
+    certbot certonly --webroot --dry-run --text -w /www --preferred-challenges=http --agree-tos --email ${EMAIL} ${CERTBOT_DOMAINS} --post-hook "/renewed.sh"
 
 	echo "Checking again in $CHECK_FREQ days"
 	sleep ${CHECK_FREQ}d

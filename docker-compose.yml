@@ -65,6 +65,8 @@ services:
         volumes:
             - /var/run/docker.sock:/tmp/docker.sock
             - ./cert:/etc/letsencrypt
+        volumes_from:
+            - web
         environment:
             - DOMAINS
             - CHECK_FREQ=10

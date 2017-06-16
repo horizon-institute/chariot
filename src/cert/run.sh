@@ -12,7 +12,7 @@ CHECK_FREQ="${CHECK_FREQ:-10}"
 check() {
 	echo "Checking certificates"
 
-	certbot renew -n --post-hook "/renewed.sh"
+	certbot renew -n --dry-run --agree-tos --email ${EMAIL} --post-hook "/renewed.sh"
 
 	echo "Checking again in $CHECK_FREQ days"
 	sleep ${CHECK_FREQ}d
@@ -24,7 +24,7 @@ if [ "${EMAIL}" ] ; then
 
 	CERTBOT_DOMAINS="-d ${DOMAINS/ / -d }"
 
-	certbot certonly --standalone --agree-tos --renew-by-default --text --email ${EMAIL} ${CERTBOT_DOMAINS}
+	certbot certonly --standalone --agree-tos --keep-until-expiring --dry-run --text --email ${EMAIL} ${CERTBOT_DOMAINS} --post-hook "/renewed.sh"
 	sh ./renewed.sh
 else
 	check

@@ -14,7 +14,7 @@ CERTBOT_DOMAINS="-d ${DOMAINS/ / -d }"
 check() {
 	echo "Checking certificates"
 
-    certbot certonly --webroot --dry-run --text -w /www --preferred-challenges=http --agree-tos --email ${EMAIL} ${CERTBOT_DOMAINS} --post-hook "/renewed.sh"
+    certbot certonly --webroot --text -w /www --preferred-challenges=http --agree-tos --email ${EMAIL} ${CERTBOT_DOMAINS} --post-hook "/renewed.sh"
 
 	echo "Checking again in $CHECK_FREQ days"
 	sleep ${CHECK_FREQ}d

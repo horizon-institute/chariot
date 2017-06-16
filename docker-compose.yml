@@ -69,5 +69,6 @@ services:
             - web
         environment:
             - DOMAINS
+            - EMAIL
             - CHECK_FREQ=10
             - SERVER_CONTAINER=chariot_web

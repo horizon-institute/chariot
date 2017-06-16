@@ -16,7 +16,7 @@ then
         fi
 	fi
 
-	echo "DOMAINS=$DOMAINS"$'\n'"CONF_TAG=$conf" >> ".env"
+	echo "EMAIL=$EMAIL"$'\n'"DOMAINS=$DOMAINS"$'\n'"CONF_TAG=$conf" >> ".env"
 fi
 
 docker-compose up -d

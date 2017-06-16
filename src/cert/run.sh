@@ -9,8 +9,6 @@ if [ -z "$DOMAINS" ] ; then
 fi
 CHECK_FREQ="${CHECK_FREQ:-10}"
 
-CERTBOT_DOMAINS="-d ${DOMAINS/ / -d }"
-
 check() {
 	echo "Checking certificates"
 
@@ -23,6 +21,8 @@ check() {
 
 if [ "${EMAIL}" ] ; then
 	echo "Requesting certificates for $DOMAINS"
+
+	CERTBOT_DOMAINS="-d ${DOMAINS/ / -d }"
 
 	certbot certonly --standalone --agree-tos --keep-until-expiring --dry-run --text --email ${EMAIL} ${CERTBOT_DOMAINS} --post-hook "/renewed.sh"
 	sh ./renewed.sh

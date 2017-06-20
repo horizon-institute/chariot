@@ -210,50 +210,52 @@ $(function () {
 					var ySc_l = get_y_scale(axis_channel_l);
 					var channel_l = fe.datastore.lookup_channel(axis_channel_l);
 
-					chart.selectAll(".yTicks2-l")
-						.data(ySc_l.ticks(20))
-						.enter().append("line")
-						.attr('class', 'graph-axis-mark')
-						.attr("x1", 0)
-						.attr("x2", 3)
-						.attr("y1", function (d) {
-							return h - ySc_l(d);
-						})
-						.attr("y2", function (d) {
-							return h - ySc_l(d);
-						})
-						.style("opacity", "0.3")
-						.style("stroke", "#000");
+					if (channel_l) {
+						chart.selectAll(".yTicks2-l")
+							.data(ySc_l.ticks(20))
+							.enter().append("line")
+							.attr('class', 'graph-axis-mark')
+							.attr("x1", 0)
+							.attr("x2", 3)
+							.attr("y1", function (d) {
+								return h - ySc_l(d);
+							})
+							.attr("y2", function (d) {
+								return h - ySc_l(d);
+							})
+							.style("opacity", "0.3")
+							.style("stroke", "#000");
 
-					// draw vertical axis "ticks" (they are actually grid lines)
-					chart.selectAll(".yTicks-l")
-						.data(ySc_l.ticks(10))
-						.enter().append("line")
-						.attr('class', 'graph-axis-mark')
-						.attr("x1", 0)
-						.attr("x2", 4)
-						.attr("y1", function (d) {
-							return h - ySc_l(d);
-						})
-						.attr("y2", function (d) {
-							return h - ySc_l(d);
-						})
-						.style("stroke", "#333");
+						// draw vertical axis "ticks" (they are actually grid lines)
+						chart.selectAll(".yTicks-l")
+							.data(ySc_l.ticks(10))
+							.enter().append("line")
+							.attr('class', 'graph-axis-mark')
+							.attr("x1", 0)
+							.attr("x2", 4)
+							.attr("y1", function (d) {
+								return h - ySc_l(d);
+							})
+							.attr("y2", function (d) {
+								return h - ySc_l(d);
+							})
+							.style("stroke", "#333");
 
-					// draw vertical axis labels
-					chart.selectAll(".yRule-l")
-						.data(ySc_l.ticks(10))
-						.enter().append("text")
-						.attr("class", "yRule-l")
-						.attr("x", -5)
-						.attr("y", function (d) {
-							return h - ySc_l(d);
-						})
-						.attr("dy", 5)
-						.attr("text-anchor", "end")
-						.text(function (d) {
-							return ySc_l.tickFormat(10, "s")(d) + channel_l.units;
-						});
+						// draw vertical axis labels
+						chart.selectAll(".yRule-l")
+							.data(ySc_l.ticks(10))
+							.enter().append("text")
+							.attr("class", "yRule-l")
+							.attr("x", -5)
+							.attr("y", function (d) {
+								return h - ySc_l(d);
+							})
+							.attr("dy", 5)
+							.attr("text-anchor", "end")
+							.text(function (d) {
+								return ySc_l.tickFormat(10, "s")(d) + channel_l.units;
+							});
+					}
 				}
 				//// Right axis
 
@@ -589,7 +591,10 @@ $(function () {
 				// Store the selected channels.
 				$.each(fe.datastore.get_datasets(), function (index, dataset) {
 					if (dataset.selected) {
-						pairs.push({'sensor': {'id': dataset.sensor}, 'channel': {'id': dataset.channel}});
+						pairs.push({
+							'sensor': {'id': dataset.sensor},
+							'channel': {'id': dataset.channel}
+						});
 					}
 				});
 

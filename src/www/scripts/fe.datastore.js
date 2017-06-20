@@ -54,7 +54,7 @@ $(function () {
 
 		var remove_annotation = function (annotation) {
 			for(var index = 0; index < raw_data.annotations.length; index ++) {
-				if(raw_data.annotations[index].id == annotation.id) {
+				if(raw_data.annotations[index].id === annotation.id) {
 					raw_data.annotations.splice(index, 1);
 					break;
 				}
@@ -143,10 +143,10 @@ $(function () {
 			data_sets.push(dataset);
 
 			$.each(fe.datastore.get_datasets(), function (index, dataset) {
-				if (x_min == -1 || dataset.x_min < x_min) {
+				if (x_min === -1 || dataset.x_min < x_min) {
 					x_min = dataset.x_min;
 				}
-				if (x_max == -1 || dataset.x_max > x_max) {
+				if (x_max === -1 || dataset.x_max > x_max) {
 					x_max = dataset.x_max;
 				}
 			});
@@ -155,7 +155,7 @@ $(function () {
 		var lookup = function (sensor_id, channel_id) {
 			var found = null;
 			$.each(data_sets, function (index, dataset) {
-				if (dataset.channel == channel_id && dataset.sensor == sensor_id) {
+				if (dataset.channel === channel_id && dataset.sensor === sensor_id) {
 					found = dataset;
 				}
 			});
@@ -165,7 +165,7 @@ $(function () {
 		var lookup_channel = function (channel_id) {
 			var found = null;
 			$.each(data_sets, function (index, dataset) {
-				if (dataset.channel == channel_id) {
+				if (dataset.channel === channel_id) {
 					found = dataset;
 				}
 			});
@@ -173,7 +173,7 @@ $(function () {
 		};
 
 		var load = function (start, end, callback) {
-			if(raw_data == null) {
+			if(raw_data === null) {
 				$.getJSON(DATA_URL, function (data) {
 					$.each(data.sensors, function (index, sensor) {
 						$.each(sensor.channels, function (index, channel) {

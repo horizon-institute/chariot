@@ -56,8 +56,11 @@ def generate_data(deployment_id, sensors=None, channels=None, simplified=True, s
                 if channels != 'all' and (
                             channel.hidden or (channels and channel.id not in channels)):
                     continue
+                aggregation = channel.aggregation
+                if not simplified:
+                    aggregation = '10s'
                 response = query(deployment, sensor.sensor, channel, start, end,
-                                 channel.aggregation)
+                                 aggregation)
                 first_value = True
                 while response.has_data():
                     if simplified:

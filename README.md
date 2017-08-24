@@ -1,5 +1,5 @@
 # What is Chariot?
-Chariot is a web app designed to store and visualise data from environmental sensors. Chariot enables monitoring of domestic environmental conditions of one or more properties. Chariot is optimised to work with the temperature/humidity/electricity sensors from [OpenEnergyMonitor] (https://openenergymonitor.org/emon/hardware). 
+Chariot is a web app designed to store and visualise data from environmental sensors. Chariot enables monitoring of domestic environmental conditions of one or more properties. Chariot is optimised to work with the temperature/humidity/electricity sensors from [OpenEnergyMonitor](https://openenergymonitor.org/emon/hardware). 
 
 We have attempted to make Chariot easy to install for interested parties who wish to use Chariot for their own monitoring purposes in accordance with [the license](https://github.com/horizon-institute/chariot/blob/master/LICENSE).
 

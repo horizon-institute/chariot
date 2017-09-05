@@ -2,7 +2,7 @@
 {% load crispy_forms_tags %}
 {% load crispy_forms_field %}
 
-{% block title %}Edit Sensor{% endblock %}
+{% block title %}Edit Sensor {{ sensor.sensor.name }}{% endblock %}
 
 {% block content %}
 <div class="mdl-grid">
@@ -31,29 +31,21 @@
                 <span class="mdl-textfield__error">{{ form.location.errors }}</span>
             </div>
 
+	        <label class="mdl-checkbox mdl-js-checkbox mdl-js-ripple-effect" for="id_nearest_thermostat" style="margin-bottom: 16px">
+		        {% crispy_field form.nearest_thermostat  'class' 'mdl-checkbox__input' %}
+		        <span class="mdl-checkbox__label">Nearest Sensor to Thermostat</span>
+	        </label>
+
             <div style="display:flex; text-align: right">
             <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
-                <label for="id_room_width" class="mdl-textfield__label ">
-                    Room Width
+                <label for="id_room_area" class="mdl-textfield__label ">
+                    Room Area
                 </label>
                 <div style="display: flex">
-                    {% crispy_field form.room_width 'class' 'mdl-textfield__input' 'min' '0' 'style' 'text-align:right'%}
-                    <div style="margin-top: 3px; margin-left: 3px; color: #666;">m</div>
+                    {% crispy_field form.room_area 'class' 'mdl-textfield__input' 'min' '0' 'style' 'text-align:right'%}
+                    <div style="margin-top: 3px; margin-left: 3px; color: #666;">m&#178;</div>
                 </div>
-                <span class="mdl-textfield__error">{{ form.room_width.errors }}</span>
-            </div>
-
-                <div style="width: 64px">&nbsp</div>
-
-            <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
-                <label for="id_room_length" class="mdl-textfield__label ">
-                    Room Length
-                </label>
-                <div style="display: flex">
-                    {% crispy_field form.room_length 'class' 'mdl-textfield__input' 'min' '0' 'style' 'text-align:right'%}
-                    <div style="margin-top: 3px; margin-left: 3px; color: #666;">m</div>
-                </div>
-                <span class="mdl-textfield__error">{{ form.room_length.errors }}</span>
+                <span class="mdl-textfield__error">{{ form.room_area.errors }}</span>
             </div>
 
                 <div style="width: 64px">&nbsp</div>
@@ -113,7 +105,7 @@
                 {% endif %}
             {% endfor %}
 
-            <input type="submit" name="add_hub" value="Update Sensor" class="submit submitButton mdl-button mdl-js-button button_right mdl-button--raised mdl-button--colored" id="submit-id-add_hub">
+            <input type="submit" name="add_hub" value="Update" class="submit submitButton mdl-button mdl-js-button button_right mdl-button--raised mdl-button--colored" id="submit-id-add_hub">
         </form>
     </div>
 </div>

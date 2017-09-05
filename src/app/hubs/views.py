@@ -32,7 +32,7 @@ class DeploymentSensorIDSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = DeploymentSensor
-        fields = ('sensor', 'cost', 'location', 'room_width', 'room_height', 'room_length')
+        fields = ('sensor', 'cost', 'location', 'nearest_thermostat', 'room_height', 'room_area')
 
 
 class DeploymentSerializer(serializers.ModelSerializer):
@@ -43,7 +43,7 @@ class DeploymentSerializer(serializers.ModelSerializer):
         model = Deployment
         fields = ('id', 'hub', 'sensors',
                   'boiler_manufacturer', 'boiler_model', 'boiler_output', 'boiler_efficiency',
-                  'building_width', 'building_height', 'building_length')
+                  'boilder_type', 'boiler_thermostat', 'building_area', 'building_height')
 
 
 class DeploymentListView(ListAPIView):

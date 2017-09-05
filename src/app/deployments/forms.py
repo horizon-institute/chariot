@@ -61,10 +61,11 @@ class DeploymentUpdateForm(forms.ModelForm):
             'address_line_one',
             'post_code',
             'notes',
-            'building_width',
+            'building_area',
             'building_height',
-            'building_length',
             'boiler_manufacturer',
+            'boiler_type',
+            'boiler_thermostat',
             'boiler_model',
             'boiler_output',
             'boiler_efficiency', ]
@@ -93,18 +94,20 @@ class DeploymentCreateForm(forms.ModelForm):
 
     class Meta:
         fields = [
+            'hub',
             'photo',
             'client_name',
-            'hub',
             'address_line_one',
             'post_code',
+            'notes',
+            'building_area',
+            'building_height',
             'boiler_manufacturer',
+            'boiler_type',
+            'boiler_thermostat',
             'boiler_model',
             'boiler_output',
-            'boiler_efficiency',
-            'building_width',
-            'building_height',
-            'building_length', ]
+            'boiler_efficiency', ]
         model = Deployment
 
 
@@ -131,7 +134,7 @@ class DeploymentSensorUpdateForm(forms.ModelForm):
     cost = forms.FloatField(required=False)
 
     class Meta:
-        fields = ['location', 'cost', 'room_height', 'room_length', 'room_width']
+        fields = ['location', 'cost', 'nearest_thermostat', 'room_area', 'room_height']
         model = DeploymentSensor
 
 

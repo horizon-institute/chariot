@@ -12,6 +12,11 @@ from hubs.models import Hub
 from sensors.models import Sensor
 from chariot.influx import drop_from
 
+BOILER_TYPES = (
+    (1, _("Gas")),
+    (2, _("Electric"))
+)
+
 
 class Deployment(models.Model):
     client_name = models.CharField(max_length=255)
@@ -30,9 +35,11 @@ class Deployment(models.Model):
     boiler_model = models.CharField(max_length=255, null=True, blank=True)
     boiler_output = models.FloatField(null=True, blank=True)
     boiler_efficiency = models.FloatField(null=True, blank=True)
-    building_width = models.FloatField(default=0)
+    boiler_type = models.IntegerField(choices=BOILER_TYPES, default=1)
+    boiler_thermostat = models.FloatField(default=20)
+
+    building_area = models.FloatField(default=0)
     building_height = models.FloatField(default=0)
-    building_length = models.FloatField(default=0)
 
     hub = models.OneToOneField(Hub, blank=True, null=True)
 
@@ -91,9 +98,9 @@ class DeploymentAnnotation(models.Model):
 class DeploymentSensor(models.Model):
     deployment = models.ForeignKey(Deployment, related_name='sensors')
     sensor = models.ForeignKey(Sensor)
-    room_width = models.FloatField(default=0)
+    room_area = models.FloatField(default=0)
     room_height = models.FloatField(default=2.4)
-    room_length = models.FloatField(default=0)
+    nearest_thermostat = models.BooleanField(default=False)
     cost = models.FloatField(default=0)
     location = models.CharField(max_length=255, blank=True, null=True)
 

@@ -82,26 +82,14 @@
     </div>
 
     <div style="display: flex">
-        <div id="div_id_building_length" style="flex:1">
+        <div id="div_id_building_area" style="flex:1">
             <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
-                <label for="id_building_length" class="mdl-textfield__label requiredField">
-                    Building length
+                <label for="id_building_area" class="mdl-textfield__label requiredField">
+                    Building area
                 </label>
                 <div style="display: flex">
-                    {% crispy_field form.building_length 'class' 'mdl-textfield__input' 'min' '0' 'style' 'text-align:right'%}
-                    <div style="margin-top: 3px; margin-left: 3px; color: #666;">m</div>
-                </div>
-            </div>
-        </div>
-        <div style="width: 16px">&nbsp</div>
-        <div id="div_id_building_width" style="flex:1">
-            <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
-                <label for="id_building_width" class="mdl-textfield__label requiredField">
-                    Building width
-                </label>
-                <div style="display: flex">
-                    {% crispy_field form.building_width 'class' 'mdl-textfield__input' 'min' '0' 'style' 'text-align:right'%}
-                    <div style="margin-top: 3px; margin-left: 3px; color: #666;">m</div>
+                    {% crispy_field form.building_area 'class' 'mdl-textfield__input' 'min' '0' 'style' 'text-align:right'%}
+                    <div style="margin-top: 3px; margin-left: 3px; color: #666;">m&#178;</div>
                 </div>
             </div>
         </div>
@@ -118,6 +106,32 @@
             </div>
         </div>
     </div>
+
+	<div style="display: flex">
+		<div id="div_id_boiler_thermostat" style="flex:1">
+			<div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+				<label for="id_boiler_thermostat" class="mdl-textfield__label ">
+					Thermostat Setting
+				</label>
+				<div style="display: flex">
+					{% crispy_field form.boiler_thermostat 'class' 'mdl-textfield__input' 'style' 'text-align:right' %}
+					<div style="margin-top: 3px; margin-left: 3px; color: #666;" title="degrees celsius">°C</div>
+				</div>
+			</div>
+		</div>
+		<div style="width: 24px">&nbsp</div>
+		<div id="div_id_boiler_type" style="flex:1">
+			<div style="padding-top: 0" class="mdl-textfield mdl-js-textfield">
+				<label class="mdl-typography--caption mdl-color-text--primary requiredField" for="id_hub">
+					Boiler Type
+				</label>
+				<label class="mdl-textfield__label"></label>
+				<div><i class="material-icons" style="position: absolute; right: 0; z-index: -10;">arrow_drop_down</i>
+					{% crispy_field form.boiler_type 'class' 'mdl-textfield__input' 'style' '-webkit-appearance: none; -moz-appearance: none; appearance: none; padding-right: 24px; border-radius: 0' %}
+				</div>
+			</div>
+		</div>
+	</div>
 
     <div style="display: flex">
         <div id="div_id_boiler_manufacturer" style="flex:1">

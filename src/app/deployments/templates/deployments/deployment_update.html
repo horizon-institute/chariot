@@ -5,38 +5,67 @@
 
 {% block scripts %}
 	<script src="/scripts/jquery.min.js"></script>
+	<style>
+		.mobile-except { display: flex; }
+		.mobile-only { display: none; }
+
+		@media only screen and (max-width: 479px) {
+			.mobile-only { display: flex; }
+			.mobile-except { display: none;}
+		}
+	</style>
 {% endblock %}
 
 {% block title %}{{ deployment.client_name }} Deployment{% endblock %}
 
+
+{% block tabs %}
+	{% if deployment.status.0 != 2 and deployment.status.0 != 1 %}
+		<div class="mdl-layout__header-row mobile-only">
+			<div class="mdl-layout-spacer"></div>
+			<!-- Navigation -->
+			<nav class="mdl-navigation">
+				<a class="mdl-navigation__link" href="{% url 'graphs:deployment' deployment.id %}">Sensor Data</a>
+				<a class="mdl-navigation__link" href="">Predictions</a>
+			</nav>
+		</div>
+	{% endif %}
+{% endblock %}
+
+{% block toolbar %}
+	{% if deployment.status.0 != 2 and deployment.status.0 != 1 %}
+		<nav class="mdl-navigation mobile-except">
+			<a class="mdl-navigation__link" href="{% url 'graphs:deployment' deployment.id %}">Sensor Data</a>
+			<a class="mdl-navigation__link" href="">Predictions</a>
+		</nav>
+	{% endif %}
+{% endblock %}
+
+
 {% block content %}
 <div class="mdl-grid">
 	<div class="mdl-cell mdl-cell--6-col mdl-cell--1-offset-tablet">
-        {% include "deployments/deployment_form_fragment.html" with deployment=deployment button='Update Deployment' %}
+        {% include "deployments/deployment_form_fragment.html" with deployment=deployment button='Update' %}
+
+		<div class="mdl-typography--text-right" style="position:relative; top: -35px; margin-right: 100px;">
+			{% if deployment.status.0 == 2 %}
+				<form style="display: inline" action="{% url 'deployments:start' deployment.id %}" method="post">
+					{% csrf_token %}
+					<input type="hidden" name="deployment" value="{{ deployment.id }}"/>
+					<button type="submit" class="mdl-button mdl-js-button mdl-button--colored">Start Deployment</button>
+				</form>
+			{% endif %}
+			{% if deployment.status.0 == 3 %}
+				<form style="display: inline" action="{% url 'deployments:end' deployment.id %}" method="post">
+					{% csrf_token %}
+					<input type="hidden" name="deployment" value="{{ deployment.id }}"/>
+					<button type="submit" class="mdl-button mdl-js-button mdl-button--colored">End Deployment</button>
+				</form>
+			{% endif %}
+		</div>
 	</div>
 
 	<div class="mdl-cell mdl-cell--6-col mdl-cell--1-offset-tablet">
-		<div class="mdl-typography--text-right" style="margin-bottom: 16px">
-			{% if deployment.status.0 == 2 %}
-			<form style="display: inline" action="{% url 'deployments:start' deployment.id %}" method="post">
-				{% csrf_token %}
-				<input type="hidden" name="deployment" value="{{ deployment.id }}"/>
-				<button type="submit" class="mdl-button mdl-js-button mdl-button--colored">Start Deployment</button>
-			</form>
-			{% endif %}
-			{% if deployment.status.0 == 3 %}
-			<form style="display: inline" action="{% url 'deployments:end' deployment.id %}" method="post">
-				{% csrf_token %}
-				<input type="hidden" name="deployment" value="{{ deployment.id }}"/>
-				<button type="submit" class="mdl-button mdl-js-button mdl-button--colored">End Deployment</button>
-			</form>
-			{% endif %}
-			{% if deployment.status.0 != 2 and deployment.status.0 != 1 %}
-			<a class="mdl-button mdl-js-button mdl-button--colored" href="{% url 'graphs:deployment' deployment.id %}">View
-				Data</a>
-			{% endif %}
-		</div>
-
 		{% if deployment.hub %}
 			<div class="device-item">
 				<i class="material-icons">device_hub</i>

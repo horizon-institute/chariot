@@ -1,8 +1,8 @@
-django==1.10.5
-Pillow==3.4.2
-djangorestframework==3.5.4
-django-braces==1.10.0
-django-crispy-forms==1.6.1
-influxdb==4.0.0
+django==1.11.4
+Pillow==4.2.1
+djangorestframework==3.6.4
+django-braces==1.11.0
+django-crispy-forms
+influxdb==4.1.0
 uwsgi
 psycopg2

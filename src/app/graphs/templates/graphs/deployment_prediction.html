@@ -1,0 +1,141 @@
+{% extends 'chariot/base.html' %}
+
+{% block scripts %}
+	<script src="/scripts/Chart.min.js"></script>
+	<style>
+		.mdl-layout__content {
+			display: inline-flex;
+			flex-direction: column;
+			margin: 16px;
+		}
+
+		.mdl-slider.is-upgraded::-webkit-slider-thumb {
+			zoom: 1.5;
+		}
+
+		#warning {
+			display: none;
+			background-color: #dce775;
+			padding: 8px;
+		}
+	</style>
+{% endblock %}
+
+{% block docTitle %}{{ deployment.client_name }} Deployment Sensor Data{% endblock %}
+{% block title %}{{ deployment.client_name }} Deployment{% endblock %}
+
+{% block content %}
+	<div style="align-self: center"><div id="warning"></div></div>
+	<div style="flex: 1">
+		<canvas id="chart"></canvas>
+	</div>
+	<div style="text-align: center">Thermostat Temperature: <span id="set_label">20</span>°C</div>
+	<div style="padding: 8px 0">
+		<input id="set_slider" class="mdl-slider mdl-js-slider" type="range" min="0" max="10" value="0">
+	</div>
+	<div style="text-align: center">Outside Temperature Change: <span id="ext_label">0</span>°C</div>
+	<div style="padding: 8px 0">
+		<input id="ext_slider" class="mdl-slider mdl-js-slider" type="range" min="0" max="10" value="0">
+	</div>
+
+	<script>
+		{% autoescape off %}
+			const predictions = {{ deployment.prediction }};
+		{% endautoescape %}
+
+		if(predictions.Error) {
+			document.getElementById('warning').innerText = predictions.Error;
+			document.getElementById('warning').style.display = 'block';
+		} else if(predictions.Warning) {
+			document.getElementById('warning').innerText = predictions.Warning;
+			document.getElementById('warning').style.display = 'block';
+		}
+
+		if('What_If_Predictions' in predictions) {
+			const ctx = document.getElementById("chart").getContext('2d');
+			const chart = new Chart(ctx, {
+				type: 'line',
+				data: {
+					labels: ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23"],
+					datasets: [{
+						backgroundColor: 'rgba(13, 71, 161, 0.5)',
+						borderColor: '#0d47a1',
+						data: predictions['What_If_Predictions'][0]['Hourly_Cost_Prediction']
+					}]
+				},
+				options: {
+					legend: {
+						display: false
+					},
+					responsive: true,
+					maintainAspectRatio: false,
+					scales: {
+						yAxes: [{
+							scaleLabel: {
+								display: true,
+								labelString: 'Cost'
+							}
+						}],
+						xAxes: [{
+							scaleLabel: {
+								display: true,
+								labelString: 'Hours'
+							},
+							gridLines: {
+								display: false
+							}
+						}]
+					}
+				}
+			});
+
+			var set_min = 1000;
+			var set_max = -1000;
+			var ext_min = 1000;
+			var ext_max = -1000;
+			for (const prediction of predictions['What_If_Predictions']) {
+				const conditions = prediction['What_If_Conditions'];
+				set_max = Math.max(set_max, conditions['Set_Point']);
+				set_min = Math.min(set_min, conditions['Set_Point']);
+
+				ext_max = Math.max(ext_max, conditions['Change_In_External_Temperature']);
+				ext_min = Math.min(ext_min, conditions['Change_In_External_Temperature']);
+			}
+
+			const set_slider = document.getElementById('set_slider');
+			const ext_slider = document.getElementById('ext_slider');
+
+			set_slider.min = set_min;
+			set_slider.max = set_max;
+			set_slider.value = ((set_max - set_min) / 2) + set_min;
+			ext_slider.min = ext_min;
+			ext_slider.max = ext_max;
+			ext_slider.value = ((ext_max - ext_min) / 2) + ext_min;
+
+			function update() {
+				const set_point = set_slider.value;
+				const ext_temp = ext_slider.value;
+
+				document.getElementById('set_label').innerHTML = set_point;
+				document.getElementById('ext_label').innerHTML = ext_temp;
+				console.log("Update to " + set_point + ", " + ext_temp);
+				for (const prediction of predictions['What_If_Predictions']) {
+					const conditions = prediction['What_If_Conditions'];
+					if (conditions['Set_Point'] == set_point && conditions['Change_In_External_Temperature'] == ext_temp) {
+						chart.data.datasets[0].data = prediction['Hourly_Cost_Prediction'];
+						chart.update();
+					}
+				}
+			}
+
+			update();
+
+			document.getElementById('set_slider').oninput = update;
+			document.getElementById('ext_slider').oninput = update;
+		} else {
+			document.getElementById('set_slider').style.display = 'none';
+			document.getElementById('ext_slider').style.display = 'none';
+
+		}
+	</script>
+{% endblock %}

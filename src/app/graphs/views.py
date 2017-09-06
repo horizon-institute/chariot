@@ -3,7 +3,7 @@ import json
 
 from django.core.urlresolvers import reverse
 from django.http import Http404
-from django.http import StreamingHttpResponse
+from django.http import HttpResponse, StreamingHttpResponse
 from django.views.generic import DetailView
 
 from chariot import utils
@@ -110,6 +110,14 @@ def generate_data(deployment_id, sensors=None, channels=None, simplified=True, s
 
 def get_all_data(request, pk):
     return StreamingHttpResponse(generate_data(pk), content_type="application/json")
+
+
+class DeploymentPredictionView(LoginRequiredMixin, BackButtonMixin, DetailView):
+    model = Deployment
+    template_name = 'graphs/deployment_prediction.html'
+
+    def get_back_url(self):
+        return reverse('deployments:update', args=(self.object.id,))
 
 
 class DeploymentGraphView(LoginRequiredMixin, BackButtonMixin, DetailView):

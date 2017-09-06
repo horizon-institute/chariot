@@ -141,10 +141,16 @@ class DeploymentPrediction(APIView):
     authentication_classes = (authentication.TokenAuthentication,)
 
     def put(self, request, pk):
-        try:
-            deployment = Deployment.objects.get(pk=pk)
-        except Deployment.DoesNotExist:
-            raise HttpResponse(status=404)
+        prediction_json = json.loads(request.body)
+        for prediction in prediction_json:
+            try:
+                deployment_id = prediction['Deployment_Id']
+                deployment = Deployment.objects.get(pk=deployment_id)
+                deployment.prediction = json.dumps(prediction)
+                deployment.save()
+            except Deployment.DoesNotExist:
+                return HttpResponse(status=404)
+
         return Response("success", status=status.HTTP_200_OK)
 
 

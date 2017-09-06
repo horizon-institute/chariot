@@ -43,6 +43,8 @@ class Deployment(models.Model):
 
     hub = models.OneToOneField(Hub, blank=True, null=True)
 
+    prediction = models.TextField(null=True, blank=True)
+
     def __str__(self):
         return '{client} Deployment'.format(client=self.client_name)
 

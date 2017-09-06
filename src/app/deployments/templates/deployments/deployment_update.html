@@ -26,7 +26,9 @@
 			<!-- Navigation -->
 			<nav class="mdl-navigation">
 				<a class="mdl-navigation__link" href="{% url 'graphs:deployment' deployment.id %}">Sensor Data</a>
-				<a class="mdl-navigation__link" href="">Predictions</a>
+				{%  if deployment.prediction %}
+					<a class="mdl-navigation__link" href="{% url 'graphs:prediction' deployment.id %}">Predictions</a>
+				{% endif %}
 			</nav>
 		</div>
 	{% endif %}
@@ -36,7 +38,9 @@
 	{% if deployment.status.0 != 2 and deployment.status.0 != 1 %}
 		<nav class="mdl-navigation mobile-except">
 			<a class="mdl-navigation__link" href="{% url 'graphs:deployment' deployment.id %}">Sensor Data</a>
-			<a class="mdl-navigation__link" href="">Predictions</a>
+			{%  if deployment.prediction %}
+				<a class="mdl-navigation__link" href="{% url 'graphs:prediction' deployment.id %}">Predictions</a>
+			{% endif %}
 		</nav>
 	{% endif %}
 {% endblock %}

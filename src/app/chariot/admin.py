@@ -11,7 +11,7 @@ class MyUserCreationForm(UserCreationForm):
         max_length=30,
         regex=r'^[:\w-]+$',
         help_text='Required. 30 characters or fewer. Alphanumeric characters only (letters, digits, hyphens, colons, and underscores).',
-        error_message='This value must contain only letters, numbers, hyphens, colons and underscores.')
+        error_messages={'invalid':'This value must contain only letters, numbers, hyphens, colons and underscores.'})
 
 
 class MyUserChangeForm(UserChangeForm):
@@ -20,7 +20,7 @@ class MyUserChangeForm(UserChangeForm):
         max_length=30,
         regex=r'^[:\w-]+$',
         help_text='Required. 30 characters or fewer. Alphanumeric characters only (letters, digits, hyphens, colons, and underscores).',
-        error_message='This value must contain only letters, numbers, hyphens, colons and underscores.')
+        error_messages={'invalid':'This value must contain only letters, numbers, hyphens, colons and underscores.'})
 
 
 class MyUserAdmin(UserAdmin):

@@ -12,6 +12,8 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
+        migrations.RunSQL('SET CONSTRAINTS ALL IMMEDIATE',
+                          reverse_sql=migrations.RunSQL.noop),
         migrations.RemoveField(
             model_name='deployment',
             name='building_length',
@@ -58,4 +60,7 @@ class Migration(migrations.Migration):
             name='room_area',
             field=models.FloatField(default=0),
         ),
+
+        migrations.RunSQL(migrations.RunSQL.noop,
+                          reverse_sql='SET CONSTRAINTS ALL IMMEDIATE'),
     ]

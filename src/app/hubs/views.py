@@ -43,7 +43,7 @@ class DeploymentSerializer(serializers.ModelSerializer):
         model = Deployment
         fields = ('id', 'hub', 'sensors',
                   'boiler_manufacturer', 'boiler_model', 'boiler_output', 'boiler_efficiency',
-                  'boilder_type', 'boiler_thermostat', 'building_area', 'building_height')
+                  'boiler_type', 'boiler_thermostat', 'building_area', 'building_height')
 
 
 class DeploymentListView(ListAPIView):

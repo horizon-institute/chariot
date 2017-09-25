@@ -169,7 +169,10 @@ class LatestDataView(APIView):
     authentication_classes = (authentication.TokenAuthentication,)
 
     def get(self, request, pk, format=None):
-        deployment = Deployment.objects.get(pk=pk)
+        try:
+            deployment = Deployment.objects.get(pk=pk)
+        except Deployment.DoesNotExist:
+            return HttpResponse(status=404)
         result = []
 
         for sensor in deployment.sensors.all():

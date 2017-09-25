@@ -179,9 +179,10 @@ class LatestDataView(APIView):
                 if value.has_data():
                     channel_obj = {'id': channel.id, 'value': value.data}
                     sensor_obj['channels'].append(channel_obj)
-            result.append(sensor_obj)
+            if sensor_obj['channels']:
+                result.append(sensor_obj)
 
-        return JsonResponse(result)
+        return JsonResponse(result, safe=False)
 
 
 class DataView(APIView):

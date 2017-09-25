@@ -177,8 +177,12 @@ class LatestDataView(APIView):
             for channel in sensor.sensor.channels.all():
                 value = last(deployment, sensor, channel)
                 if value.has_data():
-                    channel_obj = {'id': channel.id, 'value': value.data}
-                    sensor_obj['channels'].append(channel_obj)
+                    data = value.data
+                    if data:
+                        channel_obj = {'id': channel.id,
+                                       'value': data[0]['last'],
+                                       'time': data[0]['time']}
+                        sensor_obj['channels'].append(channel_obj)
             if sensor_obj['channels']:
                 result.append(sensor_obj)
 
@@ -214,5 +218,6 @@ class DataView(APIView):
         if 'aggregate' in request.GET:
             aggregate = request.GET['aggregate']
 
-        return StreamingHttpResponse(generate_data(pk, sensors, channels, simplify, start, end, aggregate),
-                                     content_type="application/json")
+        return StreamingHttpResponse(
+            generate_data(pk, sensors, channels, simplify, start, end, aggregate),
+            content_type="application/json")

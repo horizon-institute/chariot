@@ -174,7 +174,7 @@ class LatestDataView(APIView):
 
         for sensor in deployment.sensors.all():
             sensor_obj = {'id': sensor.id, 'channels': []}
-            for channel in sensor.channels.all():
+            for channel in sensor.sensor.channels.all():
                 value = last(deployment.id, sensor.id, channel.id)
                 channel_obj = {'id': channel.id, 'value': value}
                 sensor_obj['channels'].append(channel_obj)

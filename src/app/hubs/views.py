@@ -4,7 +4,7 @@ import logging
 from chariot.influx import influx
 from datetime import datetime
 from django.core.urlresolvers import reverse
-from django.http import HttpResponse, StreamingHttpResponse
+from django.http import JsonResponse, HttpResponse, StreamingHttpResponse
 from django.shortcuts import get_object_or_404
 import json
 from django.views.generic import CreateView
@@ -18,7 +18,7 @@ from chariot import utils
 from chariot.mixins import LoginRequiredMixin, BackButtonMixin
 from chariot.utils import LOCALE_DATE_FMT
 from deployments.models import Deployment, DeploymentSensor
-from graphs.views import generate_data
+from graphs.views import generate_data, last
 from hubs.forms import HubCreateForm
 from hubs.models import Hub
 from sensors.models import Sensor
@@ -74,8 +74,7 @@ def get_token(request, id):
     try:
         hub = Hub.objects.get(id=id)
         token = Token.objects.latest('created')
-        return HttpResponse(json.dumps({'token': token.key, 'deployment': hub.deployment.pk}),
-                            content_type='application/json')
+        return JsonResponse({'token': token.key, 'deployment': hub.deployment.pk})
     except Hub.DoesNotExist:
         return HttpResponse(status=404)
     except Token.DoesNotExist:
@@ -166,10 +165,28 @@ class HubCreateView(LoginRequiredMixin, BackButtonMixin, CreateView):
         return reverse('devices')
 
 
+class LatestDataView(APIView):
+    authentication_classes = (authentication.TokenAuthentication,)
+
+    def get(self, request, pk, format=None):
+        deployment = Deployment.objects.get(pk=pk)
+        result = []
+
+        for sensor in deployment.sensors:
+            sensor_obj = {'id': sensor.id, 'channels': []}
+            for channel in sensor.channels:
+                channel_obj = {'id': channel.id, 'value': last(deployment.id, sensor.id, channel.id)}
+                sensor_obj['channels'].append(channel_obj)
+            result.append(sensor_obj)
+
+        return JsonResponse(result)
+
+
 class DataView(APIView):
     authentication_classes = (authentication.TokenAuthentication,)
 
     def get(self, request, pk, format=None):
+        aggregate = None
         sensors = None
         channels = None
         start = None
@@ -191,6 +208,8 @@ class DataView(APIView):
             end = datetime.strptime(request.GET['end'], LOCALE_DATE_FMT)
 
         simplify = 'simplify' not in request.GET or request.GET['simplify'].lower() != 'false'
+        if 'aggregate' in request.GET:
+            aggregate = request.GET['aggregate']
 
-        return StreamingHttpResponse(generate_data(pk, sensors, channels, simplify, start, end),
+        return StreamingHttpResponse(generate_data(pk, sensors, channels, simplify, start, end, aggregate),
                                      content_type="application/json")

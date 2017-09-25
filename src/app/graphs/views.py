@@ -3,7 +3,7 @@ import json
 
 from django.core.urlresolvers import reverse
 from django.http import Http404
-from django.http import HttpResponse, StreamingHttpResponse
+from django.http import StreamingHttpResponse
 from django.views.generic import DetailView
 
 from chariot import utils
@@ -31,8 +31,16 @@ def query(deployment, sensor, channel, start=None, end=None, aggregation="2m"):
     return query_obj.fetch()
 
 
+def last(deployment, sensor, channel):
+    query_obj = select("LAST").from_table(channel.id) \
+        .where('deployment').eq(deployment.pk) \
+        .where('sensor').eq(sensor.id)
+
+    return query_obj.fetch()
+
+
 def generate_data(deployment_id, sensors=None, channels=None, simplified=True, start=None,
-                  end=None):
+                  end=None, aggregate=None):
     try:
         yield '{"sensors":['
         deployment = Deployment.objects.get(pk=deployment_id)
@@ -59,8 +67,9 @@ def generate_data(deployment_id, sensors=None, channels=None, simplified=True, s
                 aggregation = channel.aggregation
                 if not simplified:
                     aggregation = '10s'
-                response = query(deployment, sensor.sensor, channel, start, end,
-                                 aggregation)
+                elif aggregate:
+                    aggregation = aggregate
+                response = query(deployment, sensor.sensor, channel, start, end, aggregation)
                 first_value = True
                 while response.has_data():
                     if simplified:

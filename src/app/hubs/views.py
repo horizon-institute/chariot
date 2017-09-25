@@ -176,11 +176,12 @@ class LatestDataView(APIView):
             sensor_obj = {'id': sensor.id, 'channels': []}
             for channel in sensor.sensor.channels.all():
                 value = last(deployment, sensor, channel)
-                channel_obj = {'id': channel.id, 'value': value}
-                sensor_obj['channels'].append(channel_obj)
+                if value.has_data():
+                    channel_obj = {'id': channel.id, 'value': value.data}
+                    sensor_obj['channels'].append(channel_obj)
             result.append(sensor_obj)
 
-        return JsonResponse(result, safe=False)
+        return JsonResponse(result)
 
 
 class DataView(APIView):

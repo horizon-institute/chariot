@@ -180,7 +180,7 @@ class LatestDataView(APIView):
                 sensor_obj['channels'].append(channel_obj)
             result.append(sensor_obj)
 
-        return JsonResponse(result)
+        return JsonResponse(result, safe=False)
 
 
 class DataView(APIView):

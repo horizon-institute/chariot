@@ -176,7 +176,7 @@ class LatestDataView(APIView):
         result = []
 
         for sensor in deployment.sensors.all():
-            sensor_obj = {'id': sensor.id, 'channels': []}
+            sensor_obj = {'id': sensor.sensor.id, 'channels': []}
             for channel in sensor.sensor.channels.all():
                 value = last(deployment, sensor.sensor, channel)
                 if value.has_data():

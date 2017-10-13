@@ -73,7 +73,7 @@ class DeploymentSensorView(BackButtonMixin, UpdateView):
     context_object_name = 'sensor'
 
     def get_back_url(self):
-        return reverse('deployments:update', args=(self.kwargs.get('pk', None)))
+        return reverse('deployments:update', args=(self.kwargs['pk'],))
 
     def get_object(self, queryset=None):
         self.object = DeploymentSensor.objects.get(
@@ -90,7 +90,7 @@ class DeploymentSensorView(BackButtonMixin, UpdateView):
         return super(BaseUpdateView, self).post(request, *args, **kwargs)
 
     def get_success_url(self):
-        return reverse('deployments:update', args=(self.kwargs.get('pk', None)))
+        return reverse('deployments:update', args=(self.kwargs['pk'],))
 
 
 class DeploymentAnnotationCreate(LoginRequiredMixin, CreateView):

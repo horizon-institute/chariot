@@ -4,7 +4,8 @@ from .views import *
 
 urlpatterns = [
     url(r'^create', DeploymentCreateView.as_view(), name='create'),
-    url(r'^(?P<pk>\d+)$', DeploymentUpdateView.as_view(), name='update'),
+    url(r'^(?P<pk>\d+)$', DeploymentView.as_view(), name='view'),
+    url(r'^(?P<pk>\d+)/update', DeploymentUpdateView.as_view(), name='update'),
     url(r'^(?P<pk>\d+)/end$', DeploymentEndView.as_view(), name='end'),
     url(r'^(?P<pk>\d+)/start$', DeploymentStartView.as_view(), name='start'),
     url(r'^(?P<pk>\d+)/fragment$', DeploymentDetailView.as_view(), name='fragment'),

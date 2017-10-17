@@ -12,7 +12,7 @@
 {% block content %}
 <div class="mdl-grid" style="padding-bottom: 72px">
 	{% for deployment in deployments %}
-		<a href="{% url 'deployments:update' deployment.id %}" style="text-decoration: none" class="mdl-card mdl-shadow--2dp mdl-cell mdl-cell--6-col mdl-cell--1-offset-tablet" data-deployment="{{deployment.id}}">
+		<a href="{% url 'deployments:view' deployment.id %}" style="text-decoration: none" class="mdl-card mdl-shadow--2dp mdl-cell mdl-cell--6-col mdl-cell--1-offset-tablet" data-deployment="{{deployment.id}}">
 			{% include "deployments/deployment_fragment.html" with deployment=deployment firstload=firstload %}
 		</a>
 	{% empty %}

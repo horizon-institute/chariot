@@ -5,9 +5,17 @@ from django.views.generic.edit import BaseUpdateView
 
 from chariot.mixins import BackButtonMixin, LoginRequiredMixin
 from .forms import *
-from .models import Deployment
+from .models import Deployment, DeploymentThermostatSetting
 
 import json
+
+
+class DeploymentView(LoginRequiredMixin, BackButtonMixin, DetailView):
+    model = Deployment
+    template_name = 'deployments/deployment_view.html'
+
+    def get_back_url(self):
+        return reverse('home')
 
 
 class DeploymentCreateView(LoginRequiredMixin, BackButtonMixin, CreateView):
@@ -19,7 +27,7 @@ class DeploymentCreateView(LoginRequiredMixin, BackButtonMixin, CreateView):
         return reverse('home')
 
     def get_success_url(self):
-        return reverse('deployments:update', args=(self.object.id,))
+        return reverse('deployments:view', args=(self.object.id,))
 
 
 class DeploymentEndView(LoginRequiredMixin, UpdateView):
@@ -27,7 +35,7 @@ class DeploymentEndView(LoginRequiredMixin, UpdateView):
     model = Deployment
 
     def get_success_url(self):
-        return reverse('deployments:update', args=(self.kwargs['pk'],))
+        return reverse('deployments:view', args=(self.kwargs['pk'],))
 
 
 class DeploymentListView(LoginRequiredMixin, ListView):
@@ -46,7 +54,7 @@ class DeploymentStartView(LoginRequiredMixin, UpdateView):
     model = Deployment
 
     def get_success_url(self):
-        return reverse('deployments:update', args=(self.kwargs['pk'],))
+        return reverse('deployments:view', args=(self.kwargs['pk'],))
 
 
 class DeploymentUpdateView(LoginRequiredMixin, BackButtonMixin, UpdateView):
@@ -54,11 +62,28 @@ class DeploymentUpdateView(LoginRequiredMixin, BackButtonMixin, UpdateView):
     form_class = DeploymentUpdateForm
     model = Deployment
 
+    def form_valid(self, form):
+        instance = form.save(commit=False)
+        for field in self.request.POST:
+            if field.startswith('thermostat_time_'):
+                index = field[16:]
+                thermostat = DeploymentThermostatSetting()
+                if 'thermostat_id_' + index in self.request.POST:
+                    id = self.request.POST['thermostat_id_' + index]
+                    thermostat = DeploymentThermostatSetting.objects.get(id=id)
+                else:
+                    thermostat = DeploymentThermostatSetting.objects.create(deployment=instance)
+
+                thermostat.setting = float(self.request.POST['thermostat_temp_' + index])
+                thermostat.time = self.request.POST['thermostat_time_' + index]
+                thermostat.save()
+        return super(DeploymentUpdateView, self).form_valid(form)
+
     def get_back_url(self):
-        return reverse('home')
+        return reverse('deployments:view', args=(self.kwargs['pk'],))
 
     def get_success_url(self):
-        return reverse('deployments:update', args=(self.kwargs['pk'],))
+        return reverse('deployments:view', args=(self.kwargs['pk'],))
 
 
 class DeploymentDetailView(LoginRequiredMixin, DetailView):
@@ -73,7 +98,7 @@ class DeploymentSensorView(BackButtonMixin, UpdateView):
     context_object_name = 'sensor'
 
     def get_back_url(self):
-        return reverse('deployments:update', args=(self.kwargs['pk'],))
+        return reverse('deployments:view', args=(self.kwargs['pk'],))
 
     def get_object(self, queryset=None):
         self.object = DeploymentSensor.objects.get(
@@ -90,7 +115,7 @@ class DeploymentSensorView(BackButtonMixin, UpdateView):
         return super(BaseUpdateView, self).post(request, *args, **kwargs)
 
     def get_success_url(self):
-        return reverse('deployments:update', args=(self.kwargs['pk'],))
+        return reverse('deployments:view', args=(self.kwargs['pk'],))
 
 
 class DeploymentAnnotationCreate(LoginRequiredMixin, CreateView):

@@ -6,7 +6,12 @@
 {% block content %}
 <div class="mdl-grid">
     <div class="mdl-cell mdl-cell--6-col mdl-cell--3-offset-desktop mdl-cell--1-offset-tablet">
-        {% include "deployments/deployment_form_fragment.html" with button='Create' %}
+	    <form class="uniForm" method="post" enctype="multipart/form-data">
+
+		    {% include "deployments/deployment_fields.html" with deployment=deployment %}
+
+		    <input type="submit" value="Create" class="submit submitButton mdl-button mdl-js-button button_right mdl-button--raised mdl-button--colored" id="submit-id-add_hub">
+	    </form>
     </div>
 </div>
 {% endblock content %}

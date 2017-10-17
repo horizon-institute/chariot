@@ -12,13 +12,12 @@ from hubs.models import Hub
 from sensors.models import Sensor
 from chariot.influx import drop_from
 
-BOILER_TYPES = (
-    (1, _("Gas")),
-    (2, _("Electric"))
-)
-
-
 class Deployment(models.Model):
+    BOILER_TYPES = (
+        (1, _("Gas")),
+        (2, _("Electric"))
+    )
+
     client_name = models.CharField(max_length=255)
     address_line_one = models.CharField(max_length=255)
     post_code = models.CharField(max_length=255)
@@ -36,7 +35,6 @@ class Deployment(models.Model):
     boiler_output = models.FloatField(null=True, blank=True)
     boiler_efficiency = models.FloatField(null=True, blank=True)
     boiler_type = models.IntegerField(choices=BOILER_TYPES, default=1)
-    boiler_thermostat = models.FloatField(default=20)
 
     building_area = models.FloatField(default=0)
     building_height = models.FloatField(default=0)
@@ -95,6 +93,16 @@ class DeploymentAnnotation(models.Model):
 
     class Meta:
         verbose_name_plural = "Deployment Annotations"
+
+
+class DeploymentThermostatSetting(models.Model):
+    deployment = models.ForeignKey(Deployment, related_name='thermostats')
+    setting = models.FloatField(default=20)
+    time = models.TimeField(default=datetime.time(16, 00))
+    days = models.CharField(default='all', max_length=100)
+
+    class Meta:
+        verbose_name_plural = "Deployment Thermostat Settings"
 
 
 class DeploymentSensor(models.Model):

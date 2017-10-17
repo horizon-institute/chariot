@@ -1,132 +1,19 @@
 {% extends 'chariot/base.html' %}
-
 {% load crispy_forms_tags %}
-{% load humanize %}
 
-{% block scripts %}
-	<script src="/scripts/jquery.min.js"></script>
-	<style>
-		.mobile-except { display: flex; }
-		.mobile-only { display: none; }
-
-		@media only screen and (max-width: 479px) {
-			.mobile-only { display: flex; }
-			.mobile-except { display: none;}
-		}
-	</style>
-{% endblock %}
-
-{% block title %}{{ deployment.client_name }} Deployment{% endblock %}
-
-
-{% block tabs %}
-	{% if deployment.status.0 != 2 and deployment.status.0 != 1 %}
-		<div class="mdl-layout__header-row mobile-only">
-			<div class="mdl-layout-spacer"></div>
-			<!-- Navigation -->
-			<nav class="mdl-navigation">
-				<a class="mdl-navigation__link" href="{% url 'graphs:deployment' deployment.id %}">Sensor Data</a>
-				{%  if deployment.prediction %}
-					<a class="mdl-navigation__link" href="{% url 'graphs:prediction' deployment.id %}">Predictions</a>
-				{% endif %}
-			</nav>
-		</div>
-	{% endif %}
-{% endblock %}
-
-{% block toolbar %}
-	{% if deployment.status.0 != 2 and deployment.status.0 != 1 %}
-		<nav class="mdl-navigation mobile-except">
-			<a class="mdl-navigation__link" href="{% url 'graphs:deployment' deployment.id %}">Sensor Data</a>
-			{%  if deployment.prediction %}
-				<a class="mdl-navigation__link" href="{% url 'graphs:prediction' deployment.id %}">Predictions</a>
-			{% endif %}
-		</nav>
-	{% endif %}
-{% endblock %}
-
+{% block title %}Update Deployment{% endblock %}
 
 {% block content %}
-<div class="mdl-grid">
-	<div class="mdl-cell mdl-cell--6-col mdl-cell--1-offset-tablet">
-        {% include "deployments/deployment_form_fragment.html" with deployment=deployment button='Update' %}
+	<div class="mdl-grid">
+		<div class="mdl-cell mdl-cell--6-col mdl-cell--3-offset-desktop mdl-cell--1-offset-tablet">
 
-		<div class="mdl-typography--text-right" style="position:relative; top: -35px; margin-right: 100px;">
-			{% if deployment.status.0 == 2 %}
-				<form style="display: inline" action="{% url 'deployments:start' deployment.id %}" method="post">
-					{% csrf_token %}
-					<input type="hidden" name="deployment" value="{{ deployment.id }}"/>
-					<button type="submit" class="mdl-button mdl-js-button mdl-button--colored">Start Deployment</button>
-				</form>
-			{% endif %}
-			{% if deployment.status.0 == 3 %}
-				<form style="display: inline" action="{% url 'deployments:end' deployment.id %}" method="post">
-					{% csrf_token %}
-					<input type="hidden" name="deployment" value="{{ deployment.id }}"/>
-					<button type="submit" class="mdl-button mdl-js-button mdl-button--colored">End Deployment</button>
-				</form>
-			{% endif %}
+			<form class="uniForm" method="post" enctype="multipart/form-data">
+
+				{% include "deployments/deployment_fields.html" with deployment=deployment %}
+				<input type="submit" value="Update"
+				       class="submit submitButton mdl-button mdl-js-button button_right mdl-button--raised mdl-button--colored"
+				       id="submit-id-add_hub">
+			</form>
 		</div>
 	</div>
-
-	<div class="mdl-cell mdl-cell--6-col mdl-cell--1-offset-tablet">
-		{% if deployment.hub %}
-			<div class="device-item">
-				<i class="material-icons">device_hub</i>
-				<div>
-					{% if 'hub' in deployment.hub.name|lower %}
-					<div>Hub</div>
-					{% else %}
-					<div>Hub {{ deployment.hub.name }}</div>
-					{% endif %}
-					<div class="mdl-card__subtitle-text">{{ deployment.hub.id }}</div>
-				</div>
-				<div style="flex: 1"></div>
-				<div class="mdl-typography--caption-force-preferred-font-color-contrast">
-					{{ deployment.hub.connection_status.1 }}
-					{% if deployment.hub.connection_status.2 %}
-					for {{ deployment.hub.connection_status.2 }}
-					{% endif %}
-				</div>
-			</div>
-		{% endif %}
-
-		{% for deployment_sensor in deployment.sensors.all %}
-		{% with deployment_sensor.sensor as sensor %}
-			<a class="device-item" href="{% url 'deployments:sensor' deployment.id sensor.id %}">
-				<i class="material-icons">router</i>
-				<div>{{ deployment_sensor.location|default:deployment_sensor.sensor.name }}
-					{% for reading in deployment_sensor.latest_readings %}
-						{% if not reading.channel.hidden %}
-							<div class="mdl-typography--caption-force-preferred-font-color-contrast">
-								{% if 'value' in reading %}
-									{{ reading.channel.name }}: {{ reading.value|floatformat }}{{ reading.channel.units }}
-								{% else %}
-									{{ reading.channel.name }}: No data
-								{% endif %}
-							</div>
-							{% if reading.channel == deployment_sensor.sensor.cost_channel %}
-								<div class="mdl-typography--caption-force-preferred-font-color-contrast">
-									{{ reading.channel.name }} Cost: {{ deployment_sensor.cost|floatformat }}p
-								</div>
-							{% endif %}
-						{% endif %}
-					{% endfor %}
-				</div>
-				<div style="flex: 1"></div>
-				<div class="mdl-typography--caption-force-preferred-font-color-contrast">
-					<span>
-						{% if deployment_sensor.latest_reading %}
-							{{ deployment_sensor.latest_reading.time|naturaltime }}
-						{% else %}
-							No data
-						{% endif %}
-
-					</span>
-				</div>
-			</a>
-		{% endwith %}
-		{% endfor %}
-	</div>
-</div>
 {% endblock content %}

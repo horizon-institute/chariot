@@ -17,7 +17,7 @@ from rest_framework.views import APIView
 from chariot import utils
 from chariot.mixins import LoginRequiredMixin, BackButtonMixin
 from chariot.utils import LOCALE_DATE_FMT
-from deployments.models import Deployment, DeploymentSensor
+from deployments.models import Deployment, DeploymentSensor, DeploymentThermostatSetting
 from graphs.views import generate_data, last
 from hubs.forms import HubCreateForm
 from hubs.models import Hub
@@ -35,15 +35,25 @@ class DeploymentSensorIDSerializer(serializers.ModelSerializer):
         fields = ('sensor', 'cost', 'location', 'nearest_thermostat', 'room_height', 'room_area')
 
 
+class DeploymentThermostatSerializer(serializers.ModelSerializer):
+    time = serializers.TimeField(format='%H:%M')
+
+    class Meta:
+        model = DeploymentThermostatSetting
+        fields = ('setting', 'time', 'days')
+
+
 class DeploymentSerializer(serializers.ModelSerializer):
     hub = serializers.PrimaryKeyRelatedField(read_only=True)
     sensors = DeploymentSensorIDSerializer(many=True)
+    thermostats = DeploymentThermostatSerializer(many=True)
+    boiler_type = serializers.CharField(source='get_boiler_type_display')
 
     class Meta:
         model = Deployment
-        fields = ('id', 'hub', 'sensors',
+        fields = ('id', 'hub', 'sensors', 'thermostats',
                   'boiler_manufacturer', 'boiler_model', 'boiler_output', 'boiler_efficiency',
-                  'boiler_type', 'boiler_thermostat', 'building_area', 'building_height')
+                  'boiler_type', 'building_area', 'building_height')
 
 
 class DeploymentListView(ListAPIView):

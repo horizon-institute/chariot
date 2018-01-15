@@ -1,0 +1,8 @@
+Django==1.8.15
+jsonpickle==0.9.5
+djangorestframework==3.6.4
+pandas==0.21.0
+python-dateutil==2.6.1
+pytz==2017.3
+six==1.11.0
+psycopg2

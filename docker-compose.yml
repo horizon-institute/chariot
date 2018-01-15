@@ -37,6 +37,15 @@ services:
                 max-size: "100m"
                 max-file: "3"
 
+    analytics:
+        build: src/analytics
+        links:
+            - app
+        volumes:
+            - ./src/analytics:/analytics
+        ports:
+            - "8000:8000"
+
     web:
         restart: always
         image: nginx:alpine

@@ -170,7 +170,7 @@ var update_date_range = function (start, end) {
 		}
 	}
 	else {
-		$('#dateFilter').text(obj.value);
+        $('#dateFilter').text(startDate.format('D MMM YYYY') + ' – ' + endDate.format('D MMM YYYY'));
 	}
 
 	//$('#load-spinner').fadeIn();
